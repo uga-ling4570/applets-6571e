@@ -1,0 +1,531 @@
+# Cloudflare guide for LING6571E
+
+> **Course restructure (2026-11-18):** for LING6571E, Activities 5C, 7A, 7B, 9A, 10A and 12A,
+> their pages and their service folders (`services/query-rewrite/`,
+> `services/backchannel-locations/`, `services/presumptive-grounding/`,
+> `services/conversation-closing/`) were **removed from this repository**. 11A and 11B are kept
+> **in reserve**: their pages now live in `docs/reserve/` and are not linked from the index;
+> `services/week11-lab/` still backs them. Everything below about the removed activities is kept
+> for reference only. The Workers already deployed on Cloudflare were **not** touched. If they
+> are no longer needed, delete them in the Cloudflare dashboard so they stop using the shared
+> free allowance (export any 7A classroom records you need first).
+
+Hi Ryan,
+
+This guide explains how Cloudflare supports Activities 5C, 7A, 7B, 10A, 11A, 11B and 12A. It also explains how to use the activities, update them, and move their services to your own Cloudflare account. Activity 9A uses audio files and browser JavaScript only; it has no Cloudflare service to transfer.
+
+The activities are already online. You do not need a Cloudflare account to use them in class. For 7A, use your GitHub account, `kayaulai`, to view the teacher tools. Students do not need accounts.
+
+Moving the services is a one-time setup. You can reuse the existing code. You do not need to write a new app or train an AI model. The move does require new account settings, private keys and service addresses. Section 5 gives the steps in order.
+
+## Zero-cost requirement and model retirement (2026-11-06)
+
+The owner's current requirement is **zero charges for every model**. This supersedes earlier permission for possible costs. Do not upgrade to Workers Paid, purchase AI Gateway credits, enable paid overages, or select a replacement model on the assumption that a low token price means free usage.
+
+Cloudflare [Workers AI pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/) provides 10,000 Neurons per day on Workers Free; further operations fail when the free allocation is exhausted. Workers Paid can bill usage above that allocation. The allowance is shared across the account, not assigned separately to each applet. Models can have published metered prices and still be available within the Free allowance; that does not make them unlimited or guarantee zero charges on an unverified account. Request-count caps in this repository do not establish a currency cap. AI Gateway spend limits are eventually consistent and are not a zero-charge guarantee ([official documentation](https://developers.cloudflare.com/ai-gateway/features/spend-limits/)).
+
+The owner has accepted quota-limited Free usage with service stopping after the daily allowance. On November 6, 2026, the account dashboard showed **Free / $0 / Current plan** and 10,000 Workers AI Neurons per day. The deployed shared service lists a Workers AI binding named `AI`; the repository inference call uses `env.AI.run(model, inputs)` without Gateway options. This local migration replaces `@cf/meta/llama-3.1-8b-instruct-fp8` (retiring November 20) with `@cf/ibm-granite/granite-4.0-h-micro` for 11A/11B/12A. It uses the Free allowance, not a paid route. **Deployment verified November 6, 2026:** shared Worker version `d9461a1e-b7d1-49c3-85be-2f27e606927d` reports Granite with `enabled: true`. Five short live requests succeeded for 11A tutor/critic, 11B top-k 1/50, and 12A system/user personas. This is a bounded smoke test, not a guarantee of classroom behavior; publishing GitHub files alone does not deploy the backend.
+
+### Repository-wide model audit
+
+All Workers AI calls in this repository were reviewed on November 6, 2026:
+
+| Activities | Worker | Model after this local change | Decision |
+| --- | --- | --- | --- |
+| 5C | `query-rewrite` | `@cf/meta/llama-3.1-8b-instruct-fast` | Retain: absent from the November retirement list; changing a working rewrite model would require separate quality validation. |
+| 7B | `presumptive-grounding` | `@cf/meta/llama-3.1-8b-instruct-fast` | Retain: absent from the retirement list. |
+| 10A | `conversation-closing` | `@cf/meta/llama-3.1-8b-instruct-fast` | Retain: absent from the retirement list. |
+| 11A, 11B, 12A | `week11-lab` | `@cf/ibm-granite/granite-4.0-h-micro` | Replace retiring FP8 model; preserve documented temperature, top-k and top-p support. |
+| 7A and browser-only activities | No Workers AI inference | None | No hosted model to replace. |
+
+The exact `-fast` and `-fp8` IDs are distinct; a shared Llama family name does not make every service affected. See the [official retirement notice](https://developers.cloudflare.com/changelog/post/2026-11-05-planned-model-deprecations/). Granite is a practical compatibility-and-free-quota choice, not a proven best model for classroom output quality. Its documented consumption is 1,542 input and 10,158 output Neurons per million tokens; all services still share the account allowance. No new paid service, external API key, fallback model or Gateway route is introduced. Live quality checks remain necessary before classroom use.
+
+Migration and deployment checks:
+
+1. Reconfirm in the Cloudflare dashboard that the target account still uses Workers Free and inference is not charged through prepaid AI Gateway credits. If zero charges cannot be established, keep inference paused rather than selecting a billable route. No account or deployment changes are authorized by this checklist.
+2. Confirm the replacement is available on Free, is not scheduled for retirement, and officially supports `temperature`, `top_k` (1–50) and `top_p`. Preserve 11B's actual parameter forwarding; do not silently ignore top-k or label browser-only simulation as hosted inference. `@cf/ibm-granite/granite-4.0-h-micro` is the selected Free-plan replacement and documents these parameters. It has metered pricing outside the Free allocation, so keeping the account on Workers Free is essential ([model schema](https://developers.cloudflare.com/workers-ai/models/granite-4.0-h-micro/)).
+3. Update both `services/week11-lab/wrangler.jsonc` (`vars.MODEL`) and `services/week11-lab/src/core.mjs` (fallback `MODEL`). Update model attribution and license links in `docs/reserve/11A_style_persona.html`, `docs/reserve/11B_temperature_sampling.html` and `docs/week_12/12A_stance_user_persona.html`, plus service/project READMEs and this guide. Audit other Workers separately; they share the account allowance.
+4. Run the service's offline tests, including the assertion that `topk` is forwarded as `top_k`; inspect a Wrangler dry run. An offline mock passing cannot prove the hosted model honors a parameter.
+5. Only after the free-plan conditions are verified and deployment is authorized, deploy the Worker and confirm the effective model via `/api/health`. Then test 11A persona comparisons, 11B sampling and exports, and 12A system/user personas within the free allocation. A GitHub Pages publication alone does not deploy the Worker. Keep the existing session secret when updating the existing service.
+
+## 1. What Cloudflare does
+
+Each activity has two parts:
+
+- **Frontend:** the page students see and use. GitHub Pages publishes these pages from this repository.
+- **Backend:** the service that works behind the page. Cloudflare runs this part. It receives requests from the page and returns a result, such as an AI reply or a saved submission.
+
+A **Cloudflare Worker** is a small program that runs on Cloudflare's computers. **Workers AI** runs the language model. **Durable Objects** keep information between requests. Here, they use Cloudflare's SQLite-backed storage. SQLite is a way to store data; you do not need to install a separate database server.
+
+| Activity | What Cloudflare does | What its storage keeps |
+| --- | --- | --- |
+| **5C: Explicature and Query Rewriting** | Runs AI to rewrite a selected Human turn using the earlier conversation. | Request counts and temporary records of requests in progress. It does not save the conversation in this storage. |
+| **7A: Backchannel Locations** | Saves classroom attempts, checks teacher sign-in, provides downloads, and shares class comparisons when the teacher chooses. It does not use AI. | Anonymous participant numbers, click times, attempts, task actions and submission times. Classroom records expire after 30 days. |
+| **7B: Presumptive Grounding** | Runs the same AI model with two different sets of instructions. One encourages an answer based on an interpretation. The other encourages a question when the meaning is unclear. | Request counts and temporary records of requests in progress. It does not save transcripts in this storage. |
+| **10A: Conversation Closing** | Continues the same completed task with the same model and settings. One instruction style tends to extend the interaction; the other tends to close after the task is done. | Request counts and temporary records of requests in progress. It does not save transcripts in this storage. |
+| **11A: Style and Persona / 11B: Temperature and Sampling / 12A: Stance and User Persona** | One shared Worker runs real model comparisons with editable system prompts, sampling settings or user and system personas. The 11B toy distribution runs entirely in the browser. | Request counts and temporary capacity records only. Student annotations, reflections and conversation text are not saved in this storage. |
+
+5C, 7B and 10A retain their existing Llama configuration. The local configuration for shared 11A/11B/12A now uses **IBM Granite 4.0 H Micro** under Apache 2.0; the shared live Worker now reports Granite after the November 6 deployment. The model runs on Cloudflare, so students do not download it. Their conversation text is sent to the model when they ask for a reply. Their private notes and reflections are not sent. Use fictional examples rather than personal information.
+
+The public GitHub repository holds the code. It does not hold 7A classroom submissions or private service keys.
+
+## 2. How to use the activities
+
+### 5C: Rewrite a message so it makes sense on its own
+
+[Open Activity 5C](https://uga-ling4570.github.io/applets-6571e/week_5/5C_explicit_query_rewriting.html)
+
+For example, after “I am choosing between a red bag and a blue bag,” the reply “The blue one” could become “I choose the blue bag.” The task is to make the meaning clear, not to answer the message.
+
+1. Load the example or write both sides of a conversation.
+2. Select **Practice human turns**.
+3. Write your own version of the selected Human turn. It should make sense without the earlier conversation.
+4. Select **Show model rewrite**. Cloudflare receives that turn and its earlier context, then returns the model's version.
+5. Compare the two versions. Choose a judgment and explain it.
+6. Select **Save reflection & continue**. Use **Download my work** before closing the tab.
+
+The model's version is not an answer key. It may leave out useful context or add an unsupported interpretation. The activity does not automatically send students' written work to a teacher dashboard. If you want to collect it, ask students to submit their downloaded work through your usual course system.
+
+### 7A: Mark where you would respond while listening
+
+[Open Activity 7A](https://uga-ling4570.github.io/applets-6571e/week_7/7A_backchannel_locations.html)
+
+For the new teacher-led classroom workflow, use [Classroom listening](https://uga-ling4570.github.io/applets-6571e/week_7/7A_backchannel_locations.html?mode=live). The original individual-listening workflow remains available from the same page.
+
+A **backchannel** is a short response, such as “mm-hmm” or “yeah,” that shows you are listening without taking over the conversation.
+
+For students in individual mode:
+
+1. Choose the recording you specify. Both recordings are available: **A user-friendly remote control** (about 2:46) and **Remote-control design preferences** (about 2:28).
+2. Use headphones and select **Start listening**.
+3. Select **I would respond here** each time you would give a short response.
+4. Listen to the end. The completed attempt is submitted automatically. The student's clicks also appear on a timeline.
+5. Open **My records & downloads** to check the receipt or download personal results. A receipt is a reference that helps locate an attempt.
+
+For a teacher-led classroom listening session:
+
+1. Open the classroom link above and select **Sign in with GitHub**. Use the authorized `kayaulai` account.
+2. Choose the recording and select **Prepare new classroom**. Copy the generated student link and send it to the class. Students do not need accounts or headphones.
+3. Use this teacher computer for the classroom speakers. Wait for the expected browser count, then select **Start class listening**. The three-second countdown and the teacher's actual audio position provide the shared timing reference.
+4. Students select **I would respond here** when they would produce a backchannel. Their clicks are saved separately for this classroom. Space and Enter work when the response button is focused.
+5. Use **Pause class** to pause the recording for everyone. If the teacher tab is hidden, audio buffers, or the connection becomes stale, playback and student marking pause until the connection is healthy again. Resume from the pause position; do not rewind within the same classroom.
+6. When the recording ends, student records submit automatically, including zero-click records. Select **Share classroom comparison** when you want students to see the anonymous comparison. Use **Download classroom CSV** for this session.
+7. Use the **Classroom sessions for this collection** selector to revisit an earlier session. Select **Prepare new classroom** before a later class so its records remain separate.
+
+For the original individual mode:
+
+1. Open **For teachers: view and download results**.
+2. Select **Sign in with GitHub** and use `kayaulai`.
+3. Select **View / refresh results** to check submissions.
+4. Use **Download all attempts (CSV)** and **Download activity log (CSV)** to save records. A CSV file is a table that can be opened in Excel.
+5. Select **Share comparison with class** when you want students to compare their click patterns. The comparison uses each participant's first completed attempt. The teacher download includes all attempts.
+
+The page creates a shared **collection**, meaning one set of records for a recording, automatically. Individual mode does not require a room or code. Classroom mode creates a separate session inside the selected collection and gives the teacher a student link. Each recording has its own collection. Ask the class to choose the same recording.
+
+Use **Prepare new classroom** for a later synchronized listening session. Use **Start next collection** only when you want a fresh collection for a later class or recording. Earlier collections and classroom sessions remain available until they expire. Download records within 30 days. Each collection supports up to 60 browser participants; one collection supports up to 20 classroom sessions.
+
+Participant numbers identify browser records, not verified students. Clearing browser storage or switching devices can create a new participant. No student names or emails are collected. If a student gives you a receipt, you can use it to find that attempt. Written reflections and students' voices are not uploaded as classroom records.
+
+To test the student view while you are signed in as a teacher, copy the classroom link into a separate browser or private window. A classroom test can use a few browsers, but do not leave a test session running during class. Classroom timing includes speaker, device and reaction delays; it is intended for classroom comparison, not laboratory-grade synchronization.
+
+### 7B: Compare an assumption with a clarification question
+
+[Open Activity 7B](https://uga-ling4570.github.io/applets-6571e/week_7/7B_presumptive_grounding.html)
+
+This activity explores **common ground**, meaning the understanding that conversation partners share. A reply can sound clear even when the speaker has misunderstood the message.
+
+1. Choose a scenario. With a partner, decide what you mean.
+2. Write one opening message and select **Start both conversations**.
+3. Read both replies. Assistant A is instructed to proceed with an interpretation. Assistant B is instructed to ask when the meaning is unclear.
+4. Continue each conversation separately. Answer questions or correct misunderstandings.
+5. Mark useful examples, write your comparison, and select **Download my work** before leaving.
+
+Both assistants use the same model. Their instructions differ, but their behavior is not guaranteed. Either one may give an unhelpful reply. Private notes about your intended meaning and written reflections stay in the browser tab.
+
+This activity does not submit student work to the instructor. Collect downloaded work separately if needed. If the live AI is unavailable, use **Offline discussion example (scripted, not live AI)**. That example is written in advance; it is not a new model response.
+
+### 10A: Compare two ways to end a conversation
+
+[Open Activity 10A](https://uga-ling4570.github.io/applets-6571e/week_10/10A_conversation_opening_closing.html)
+
+This activity follows 9A's question about when a new turn can start. Students now examine when a whole conversation can end. The first four turns are fixed: a user requests a study-group reminder, supplies the details and receives the draft. The assistant has **not** sent the reminder.
+
+1. Read the four shared turns and identify where the task is completed.
+2. Write one ending message and select **Send the same message to both**.
+3. Compare the first live replies. Assistant A is instructed to keep a useful interaction going when possible; Assistant B is instructed to move toward closing when the task is complete. Both receive the same starting context, model and settings.
+4. Continue either conversation if useful, then mark what each first reply did and quote supporting words. The later histories may differ, so the first replies are the fairest direct comparison.
+5. Discuss when a follow-up is useful and when it makes the user do extra work to leave. Select **Download my work** before closing the tab.
+
+The instruction styles are tendencies, not guaranteed outcomes or automatic scores. The fixed exchange is composed on the server for each model request, so a browser cannot replace that shared starting context. Predictions, observations and reflection notes stay in the browser tab. No student work is automatically submitted to the instructor. If live AI is unavailable, use the clearly labelled scripted offline example for discussion.
+
+### 11A and 11B: Compare language choices and sampling
+
+[Open Activity 11A](https://uga-ling4570.github.io/applets-6571e/reserve/11A_style_persona.html): write two system personas, send the same short task to both, and annotate exact words with their social meaning. Download the comparison before leaving.
+
+[Open Activity 11B](https://uga-ling4570.github.io/applets-6571e/reserve/11B_temperature_sampling.html): build the browser toy model and change sampling controls to update its distribution immediately. Then compare repeated real-model outputs using a fixed prompt. The toy model needs no Cloudflare allowance; real-model requests do. Top-q currently uses nucleus cumulative mass as an explicitly documented implementation choice for instructor review.
+
+Students need no accounts. Notes and saved comparisons stay in the current browser tab until downloaded; they are not automatically submitted. Clearly labelled authored practice examples remain available without live AI.
+
+## 3. Where the code and settings are
+
+### GitHub
+
+The repository is [uga-ling2150/applets](https://github.com/uga-ling2150/applets).
+
+The GitHub Pages settings were checked for this handover. The site publishes from the **main** branch and the **/docs** folder. A branch is a version of the repository; `main` is the version used for publication.
+
+| Activity | Main page | Frontend files | Backend folder |
+| --- | --- | --- | --- |
+| 5C | `docs/week_5/5C_explicit_query_rewriting.html` | `docs/week_5/5c/` | `services/query-rewrite/` |
+| 7A | `docs/week_7/7A_backchannel_locations.html` | `docs/week_7/7a/` | `services/backchannel-locations/` |
+| 7B | `docs/week_7/7B_presumptive_grounding.html` | `docs/week_7/7b/` | `services/presumptive-grounding/` |
+| 10A | `docs/week_10/10A_conversation_opening_closing.html` | `docs/week_10/10a/` | `services/conversation-closing/` |
+| 11A / 11B | `docs/reserve/11A_style_persona.html` / `11B_temperature_sampling.html` | `docs/reserve/` | `services/week11-lab/` (shared) |
+| 12A | `docs/week_12/12A_stance_user_persona.html` | `docs/week_12/12a/` (layout and service client from `docs/reserve/11a/`) | `services/week11-lab/` (shared) |
+
+### Cloudflare
+
+The current Worker addresses are:
+
+| Activity | Worker name | Service address |
+| --- | --- | --- |
+| 5C | `ling2150-query-rewrite` | `https://ling2150-query-rewrite.ling2150-query-rewrite.workers.dev` |
+| 7A | `ling2150-7a-classroom` | `https://ling2150-7a-classroom.ling2150-query-rewrite.workers.dev` |
+| 7B | `ling2150-7b-grounding` | `https://ling2150-7b-grounding.ling2150-query-rewrite.workers.dev` |
+| 10A | `ling2150-10a-closing` | `https://ling2150-10a-closing.ling2150-query-rewrite.workers.dev` |
+| 11A / 11B / 12A | `ling2150-week11-lab` | `https://ling2150-week11-lab.ling2150-query-rewrite.workers.dev` |
+
+The existing service notes describe a Cloudflare Free plan. The 10A deployment was verified in the same Cloudflare account that lists the 5C, 7A and 7B Workers. Billing settings and remaining allowance were not checked. The address ending in `workers.dev` is a public service address, not an account login.
+
+Each backend folder contains `wrangler.jsonc`. This file tells Cloudflare the Worker name, storage connections and other settings. **Wrangler** is Cloudflare's command-line tool for sending code to Cloudflare. **Deploy** means publish that code so the service can run online.
+
+The files already define the required storage. You do not need to create a separate D1 database or write database tables. Keep the existing `durable_objects` and `migrations` sections. The migration section tells Cloudflare how to create the storage for these programs.
+
+These private values must be set separately:
+
+| Service | Secret name | Purpose |
+| --- | --- | --- |
+| 5C | `SESSION_SECRET` | Signs temporary browser sessions so the backend can check them. |
+| 7B | `SESSION_SECRET` | Does the same for 7B. Use a different value from 5C. |
+| 10A | `SESSION_SECRET` | Does the same for 10A. Use a unique value, separate from 5C and 7B. |
+| 11A / 11B / 12A | `SESSION_SECRET` | Signs temporary sessions for their shared Worker. Generate a unique value. |
+| 7A | `GITHUB_CLIENT_SECRET` | Lets the backend complete GitHub teacher sign-in. |
+
+A **secret** is a private value stored in Cloudflare. Do not put it in GitHub, HTML, this guide or Freedcamp. Existing secret values are not needed for a fresh installation; create new ones in your own account.
+
+7A uses **GitHub OAuth**, a sign-in process that lets the app check a teacher's GitHub identity without receiving the teacher's password. Its existing OAuth app is documented as owned by `yan2li3`. Ryan's allowed GitHub ID is `43101723`; the developer/reviewer ID is `316212992`. These fixed numbers are checked instead of usernames.
+
+Teacher access and service ownership are separate. Signing in to 7A as a teacher does not give access to the Cloudflare account.
+
+## 4. How to update the existing apps
+
+### Change page text or layout
+
+1. Open the relevant file in GitHub and select **Edit**.
+2. Make the change and select **Commit changes**. A commit is a saved change in the repository.
+3. Save to `main`, or merge the reviewed change into `main` if using a separate branch.
+4. Check the repository's **Actions** page. Wait for **pages build and deployment** to finish successfully.
+5. Open the published activity and check the change. Refresh the browser if it still shows the old version.
+
+The shared page style is in `docs/style.css`. Follow [conventions.md](conventions.md) when changing layout.
+
+### Change backend behavior
+
+Edit the matching file under `services/`, run its tests, and deploy that Worker. The command blocks in Section 5 also show how to test and deploy. For a routine update, keep the existing account settings and secrets. Do not generate new secrets each time.
+
+**A GitHub commit publishes the frontend through Pages. It does not deploy the Cloudflare backend under the documented setup.** Backend changes need a separate Wrangler deployment.
+
+7B and 10A each have a copy of their page served by their Worker. Run `npm run build` in the matching service folder before deploying so that copy includes the latest page changes.
+
+5C, 7B, 10A and the shared 11A/11B service have an `ENABLED` setting in `wrangler.jsonc`. Set it to `"false"` and deploy to pause AI requests. Set it to `"true"` and deploy to resume them. 7A does not use this setting.
+
+## 5. Move the services to your own Cloudflare account
+
+This section keeps the same GitHub repository and student page links. Only the backend account changes. You will need to sign in to your own accounts, enter the new private values, and complete the steps below. Creating a Cloudflare account alone does not move the running services or saved records.
+
+### Step 1: Save classroom records and choose a time
+
+Choose a time when students are not using the activities. In 7A, download the records you want to keep for each recording and each relevant collection.
+
+Deploying the code to a new account does **not** copy the old records. The new service starts with separate storage. Downloads provide an archive, but this project does not document a way to restore that archive into the new online teacher dashboard. Old receipts and teacher sessions should not be expected to work in the new service.
+
+Keep the old service available during the move. Do not delete it before the new service has passed the checks in Section 6.
+
+### Step 2: Prepare your account and computer
+
+1. Create your account at [Cloudflare](https://dash.cloudflare.com/). Start with the Free plan. Check that Workers AI and SQLite Durable Objects are available in the account.
+2. In Cloudflare, find your **Account ID** and copy it. It identifies the destination account; it is not a password. Workers & Pages may also ask you to choose a `workers.dev` subdomain. This becomes part of your new service addresses.
+3. Install the supported **Node.js LTS** version from [nodejs.org](https://nodejs.org/). Node.js runs the project's setup tools. It includes `npm` and `npx`, which install or run those tools.
+4. In GitHub, open this repository, select **Code → Download ZIP**, and unzip it on your computer. Use a fresh copy for the move. You can also clone the repository if you already use Git.
+5. Open a terminal in the unzipped `applets-main` folder. A terminal lets you run the commands below. On Windows, use PowerShell; on macOS, use Terminal. The commands assume you start in this folder.
+
+Run:
+
+```sh
+node --version
+npm --version
+npx wrangler login
+npx wrangler whoami
+```
+
+The login command opens a browser. Sign in to the new Cloudflare account. Check that `whoami` shows the intended account before continuing.
+
+Open the five `wrangler.jsonc` files listed in Section 3. In each file, add this top-level setting after the opening `{`, replacing the example text with your actual Account ID:
+
+```json
+"account_id": "YOUR_CLOUDFLARE_ACCOUNT_ID",
+```
+
+Keep the existing Worker names and storage settings. Set `"ENABLED": "false"` in the 5C, 7B, 10A and week11-lab files for the first deployment. This keeps AI requests paused while you finish setup.
+
+### Step 3: Set up 5C
+
+Run these commands from the repository folder:
+
+```sh
+cd services/query-rewrite
+npm install --global pnpm
+pnpm install --frozen-lockfile
+pnpm test
+pnpm exec wrangler deploy
+```
+
+`pnpm` is the package tool already used by this service. The tests check the code with simulated model responses. Stop and resolve any failed test or deployment before continuing.
+
+Copy the Worker URL printed after deployment. This is your **new 5C address**.
+
+Generate a private random value:
+
+```sh
+node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
+pnpm exec wrangler secret put SESSION_SECRET
+```
+
+Paste the generated value when Wrangler asks for the secret. Keep it private. In `wrangler.jsonc`, set `ENABLED` to `"true"`, then run:
+
+```sh
+pnpm exec wrangler deploy
+cd ../..
+```
+
+### Step 4: Set up 7B
+
+Run from the repository folder:
+
+```sh
+cd services/presumptive-grounding
+npm install
+npm test
+npm run build
+npx wrangler deploy
+```
+
+Copy the printed Worker URL as your **new 7B address**. Generate a new secret for this service:
+
+```sh
+node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
+npx wrangler secret put SESSION_SECRET
+```
+
+Paste this new value when asked. Set `ENABLED` to `"true"` in this service's `wrangler.jsonc`, then run:
+
+```sh
+npx wrangler deploy
+cd ../..
+```
+
+Step 6 below rebuilds the Worker page with its new address. Until then, that copy of the page still contains the old API address.
+
+### Step 4A: Set up 10A
+
+Run from the repository folder:
+
+```sh
+cd services/conversation-closing
+npm install
+npm test
+npm run build
+npx wrangler deploy
+```
+
+Copy the printed Worker URL as your **new 10A address**. Generate a different secret for this service:
+
+```sh
+node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
+npx wrangler secret put SESSION_SECRET
+```
+
+Paste that value when asked. Set `ENABLED` to `"true"` in `services/conversation-closing/wrangler.jsonc`, then run:
+
+```sh
+npx wrangler deploy
+cd ../..
+```
+
+Like 7B, the 10A Worker also serves a standalone copy of its page. Step 6 rebuilds this copy after its API address changes. The fixed four-turn starting exchange is kept in `services/conversation-closing/src/core.mjs`; keep it synchronized with the visible exchange on the student page if you edit the scenario.
+
+### Step 4B: Set up the shared 11A/11B service
+
+Run from the repository folder (install pnpm as in Step 3 if needed):
+
+```sh
+cd services/week11-lab
+pnpm install --frozen-lockfile
+pnpm test
+pnpm exec wrangler deploy
+node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
+pnpm exec wrangler secret put SESSION_SECRET
+```
+
+Copy the printed Worker URL as the **new 11A/11B address**. Paste the newly generated secret only into Wrangler's prompt. Set `ENABLED` to `"true"` in this service's configuration, then run:
+
+```sh
+pnpm exec wrangler deploy
+cd ../..
+```
+
+Keep the `AI` binding and `CLASSROOM` Durable Object configuration and migrations. This service is API-only; it has no mirrored page to rebuild. Its new storage starts fresh. There are no stored student annotations or conversations to transfer. Both activities use this one service and do not require GitHub OAuth.
+
+### Step 5: Set up 7A and your teacher sign-in
+
+Run from the repository folder:
+
+```sh
+node --test services/backchannel-locations/tests/core.test.cjs services/backchannel-locations/tests/frontend.test.cjs services/backchannel-locations/tests/roles.test.cjs services/backchannel-locations/tests/classroom.test.mjs
+npx wrangler deploy --config services/backchannel-locations/wrangler.jsonc
+```
+
+Copy the printed Worker URL as your **new 7A address**. Teacher sign-in will not work until you finish the following setup.
+
+While signed in to your GitHub account, open **Settings → Developer settings → OAuth Apps → New OAuth App**. Create a new app for this service using:
+
+| Field | Value |
+| --- | --- |
+| Application name | `LING6571E 7A Teacher Sign-in` |
+| Homepage URL | `https://uga-ling4570.github.io/applets-6571e/week_7/7A_backchannel_locations.html` |
+| Authorization callback URL | Your new 7A Worker address followed by `/api/teacher/callback` |
+
+The **callback URL** is where GitHub returns the user after sign-in. For example, if the new address is `https://ling2150-7a-classroom.example.workers.dev`, the callback is `https://ling2150-7a-classroom.example.workers.dev/api/teacher/callback`. Replace the example with the actual address.
+
+After registering the app, copy its **Client ID** and generate a **Client Secret**. The ID is public configuration. The secret must stay private. Creating your own OAuth app leaves the old sign-in service available during the move.
+
+In `services/backchannel-locations/wrangler.jsonc`:
+
+- Replace `GITHUB_CLIENT_ID` with your new app's Client ID.
+- Keep `43101723` in `GITHUB_TEACHER_IDS` for your `kayaulai` account. Keep `316212992` only if you still want the developer/reviewer to have teacher access. For your access alone, set the value to `"43101723"`.
+
+Then run from the repository folder:
+
+```sh
+npx wrangler secret put GITHUB_CLIENT_SECRET --config services/backchannel-locations/wrangler.jsonc
+npx wrangler deploy --config services/backchannel-locations/wrangler.jsonc
+```
+
+Enter the new OAuth Client Secret when asked. Do not enter your GitHub password as this secret.
+
+### Step 6: Connect the pages to the new services
+
+An **API address** is the address a page uses to reach its backend. Replace the old addresses in these five files with the new ones. Use the address without a final `/`.
+
+| File | Setting to change |
+| --- | --- |
+| `docs/week_5/5c/config.js` | `apiBase` → new 5C address |
+| `docs/week_7/7a/classroom.js` | `API` → new 7A address |
+| `docs/week_7/7b/applet.js` | `API` → new 7B address |
+| `docs/week_10/10a/applet.js` | `API` → new 10A address |
+| `docs/reserve/11a/live.js` | `DEFAULT` → new shared 11A/11B/12A address (11B and 12A load the same file). |
+
+Leave the student GitHub Pages URLs unchanged. The existing allowed website settings still apply because the pages remain on `https://uga-ling2150.github.io`.
+
+Rebuild and deploy the 7B and 10A mirrors from your local copy:
+
+```sh
+cd services/presumptive-grounding
+npm run build
+npx wrangler deploy
+cd ../..
+cd services/conversation-closing
+npm run build
+npx wrangler deploy
+cd ../..
+```
+
+Before publishing the frontend changes, run the health checks in Section 6 against the new addresses. Teacher connection settings can test a new address temporarily; reset any saved override before testing the default. Then save the changed frontend files and five changed `wrangler.jsonc` files to this repository's `main` branch. You can use GitHub's file editor or **Add file → Upload files** in the correct folder. Preserve the paths in the tables above. Upload only those intended files, not the whole local folder, installed packages or secret files.
+
+Wait for GitHub Pages to finish publishing. Complete the activity checks in Section 6, including your own GitHub sign-in. If a check fails, restore the previous frontend API addresses and publish them while you fix the new service. This reconnects the pages to the old services if they are still available.
+
+After all checks pass, update the address table in this guide. Record which account holds the old 7A records. Keep any needed exports in your usual private course storage, outside this public repository.
+
+## 6. How to confirm the setup works
+
+### First, check that each service responds
+
+A **health check** is a small request that asks whether the service is reachable. It does not run the AI or create a student attempt.
+
+For 7A, open the new Worker address followed by `/api/health`. It should show `"ok":true`.
+
+For 7B, 10A and the shared 11A/11B service, open each new Worker address followed by `/api/health`. Each should show `"enabled":true` and the model name.
+
+5C checks which website sent the request, so use this command with the actual new 5C address:
+
+```sh
+curl -H "Origin: https://uga-ling2150.github.io" "https://YOUR-5C-WORKER.workers.dev/health"
+```
+
+On Windows PowerShell, use `curl.exe` instead of `curl`. Expect `"enabled":true` and the model name. Opening this URL directly in a browser can return `origin_not_allowed`; that alone does not mean the deployment failed.
+
+The 5C, 7A and 7B service health checks passed during the September 23, 2026 review. 10A's health check and live replies were checked during its October 2026 deployment. A health check does not prove that AI replies, sign-in or data saving work. After a move or backend change, also complete the checks below.
+
+### Then, check the full activity
+
+| Activity | Check | Success means |
+| --- | --- | --- |
+| 5C | Open the published page, write a rewrite, and select **Show model rewrite**. Download your work. | An actual model rewrite appears, and the download contains your work. |
+| 7A individual | Choose a recording, mark a few points, listen to the end, and refresh. | The completed attempt has a receipt and remains visible after refresh. |
+| 7A classroom | Sign in as `kayaulai`, prepare a classroom, open the student link in a separate browser, start, pause, resume and finish playback. | Student marking is disabled while the class is paused or disconnected; the completed record appears in the classroom comparison and CSV. |
+| 7A teacher | Share a completed classroom comparison. | A separate unsigned-in browser can see the released anonymous comparison, without submission timestamps. |
+| 7A recordings | Check each recording separately. | Records stay with the selected recording. |
+| 7B | Send an opening message to both assistants and continue each conversation. Download the result. | Both assistants return replies, and the download contains the conversations and reflection. |
+| 10A | Send the same ending message to both assistants after the fixed exchange. Compare the first replies, continue at least one side, annotate evidence and download. | Both assistants return replies, both received the same fixed context, and the download contains the conversations and observations. |
+| 11A | Generate both persona replies, annotate a quotation and download the comparison. | Both replies are live, use the same task and model settings, and the download preserves the quotation and interpretation. |
+| 12A | Generate both persona replies, highlight a quotation with a stance type and download the comparison. | Both replies are live, use the same question and model settings, and the download preserves the quotation, stance type and interpretation. |
+| 11B | Change a toy sampling control, then request repeated real-model outputs and download. | The toy distribution updates without an Apply click; live replies and exports identify the actual settings used. |
+
+Use fictional test content. AI checks use some of the account's allowance. Before a large class, also try the pages on the intended classroom network.
+
+## 7. Common problems and what to check
+
+| Problem | What to do |
+| --- | --- |
+| The page opens, but AI or saving does not work. | The page and backend are separate. Check the API address in the frontend file, then check that Worker in Cloudflare. |
+| The new page still calls the old service. | Confirm that the changed file is on `main`, wait for Pages publication, and refresh. For the 7B and 10A Worker copies, rebuild and deploy the matching service as well. |
+| 5C, 7B, 10A, 11A or 11B says the service is unavailable. | Check `ENABLED`, that service's `SESSION_SECRET`, and the `AI` and `CLASSROOM` connections in its Worker configuration. Also check Workers AI usage and model availability. |
+| A request limit has been reached. | Check the app's daily/session limits and the Cloudflare account's remaining allowance. Do not repeatedly resend the same request. 7B and 10A have offline discussion examples. |
+| A reply takes too long. | Wait briefly and retry manually. The older AI services use approximately 25/30-second backend/browser waits. The shared 11A/11B service allows 90 seconds for inference and 105 seconds in the browser, with capacity leases expiring after 120 seconds. Keep or download existing work before leaving. |
+| 7A teacher sign-in fails. | Check the OAuth callback address, Client ID and Client Secret. Confirm that `43101723` is in the teacher list. Sign in again if the session has expired. |
+| A 7A attempt is missing. | Check the recording, selected collection, completion and submission status, and the 30-day expiry. Check whether the student changed browsers or cleared storage. |
+| Students cannot see the class comparison. | Select **Share comparison with class** for the same recording and collection. Then refresh the student view. |
+| A classroom student cannot mark. | Check that the teacher has started or resumed playback, that the student page has a fresh connection, and that the classroom link includes the correct room. Marking is intentionally disabled while the shared clock is stale or the class is paused. |
+| A classroom session is in the wrong state. | Use the classroom session selector to reopen the intended session. Do not rewind a running session; prepare a new classroom for another pass. |
+| A downloaded HTML copy fails while the course link works. | Use the official course link. A local file is a different browser origin, and each backend has its own rules about which origins it accepts. |
+| Code changed in GitHub, but backend behavior did not change. | Deploy the corresponding Worker. A GitHub Pages update alone does not publish backend code. |
+
+The configured daily AI request limits are 360 for 5C, 1,200 for 7B and 600 for 10A. These are limits set by the apps. They do not guarantee that the account's free AI allowance covers that many calls. The AI activities may share the account allowance. Check Cloudflare usage before class. If capacity is insufficient, pause AI with `ENABLED` set to `"false"` rather than assuming a paid upgrade is required.
+
+For 11A/11B, `/api/health` reports the effective limits. Daily and session values of **0 disable those app-level cumulative caps**; this is not unlimited Cloudflare allowance. Their shared service allows 120 requests/minute, 30 concurrent requests and at most 1,024 output tokens per request. A persona comparison uses two requests. These settings do not change the older activities’ limits or establish a monetary spending cap. A 429 can indicate temporary capacity protection; a 503 can indicate provider failure or inference timeout. Check the error message, bindings and account usage before retrying.
+
+If you need help, record the activity URL, approximate time, exact error message and what you were doing. Also note whether you used the course page or a downloaded copy. Do not include private keys or student records in a public issue.
+
+## Reference files
+
+The service READMEs contain more detailed implementation and past test notes:
+
+- [5C service README](services/query-rewrite/README.md)
+- [7A service README](services/backchannel-locations/README.md)
+- [7B service README](services/presumptive-grounding/README.md)
+- [10A service README](services/conversation-closing/README.md)
+- [11A/11B service README](services/week11-lab/README.md)
+
+Official setup references: [Wrangler installation](https://developers.cloudflare.com/workers/wrangler/install-and-update/), [Cloudflare secrets](https://developers.cloudflare.com/workers/configuration/secrets/), and [creating a GitHub OAuth app](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app).
+
+This handover documents the existing setup and the steps for a future move. It does not mean the services have already been moved to Ryan's account. GitHub Pages settings were verified while preparing the guide. A full migration and a new end-to-end classroom test have not been performed.

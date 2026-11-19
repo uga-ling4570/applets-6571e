@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Applications Index</title><link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;0,800;1,400&family=Merriweather+Sans:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+    <style>
+    .week-section {
+          margin-bottom: 2.5rem;
+        }
+        .week-section:last-of-type {
+          margin-bottom: 0;
+        }
+        .week-section h2 {
+          font-size: 1.25rem;
+          margin-bottom: 1rem;
+          padding-bottom: 0.5rem;
+          border-bottom: 2px solid var(--line);
+          color: var(--olympic);
+        }
+        .app-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+          gap: 16px;
+        }
+        .app-card {
+          background: var(--panel-alt);
+          border: 1px solid var(--line);
+          border-radius: 6px;
+          padding: 16px;
+          transition: border-color 0.2s, transform 0.1s;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        }
+        .app-card:hover {
+          border-color: var(--uga-red);
+          transform: translateY(-2px);
+          background: #fff;
+        }
+        .app-card h3 {
+          font-size: 1rem;
+          margin-bottom: 6px;
+        }
+        .app-card p {
+          font-size: 0.85rem;
+          color: var(--muted);
+          font-family: "Merriweather Sans", sans-serif;
+          margin-bottom: 16px;
+        }
+    </style>
+
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="page-header">
+    <h1><a href="https://linguistics.uga.edu/">University of Georgia</a></h1>
+    <h2><a href="index.html">Quantitative Linguistics Webapps</a></h2>
+</header>
+
+    <main id="main" class="wrap" tabindex="-1">
+        <!-- Hero Section -->
+        <div class="hero">
+            <div class="hero-text">
+                <h2><span>LING6571E</span> Demystifying Conversational AI</h2>
+                <p>Explore the collection of interactive web applications developed throughout the semester, organized by module.</p>
+            </div>
+
+        </div>
+
+        
+        <!-- Week 1 -->
+        <section class="week-section">
+            <h2>Helpful tools</h2>
+            <div class="app-grid">
+                <div class="app-card">
+                    <div>
+                        <h3>VictoryXR Transcript Formatter</h3>
+                        <p>Format transcripts from HoloTutor/VictoryXR.</p>
+                    </div>
+                    <a href="helpers/victoryxr_transcript_formatter.html" class="btn-uga">Launch App</a>
+                </div>
+                <div class="app-card">
+                    <div>
+                        <h3>Whisper Transcript Formatter</h3>
+                        <p>Format transcripts from Whisper.</p>
+                    </div>
+                    <a href="helpers/whisper_transcript_formatter.html" class="btn-uga">Launch App</a>
+                </div>
+                <div class="app-card">
+                    <div>
+                        <h3>oTranscribe Transcript Formatter</h3>
+                        <p>Turn an oTranscribe .otr file into a table.</p>
+                    </div>
+                    <a href="helpers/otr_transcript_formatter.html" class="btn-uga">Launch App</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="week-section">
+            <h2>Module 4: Multilinguality</h2>
+            <div class="app-grid">
+                <div class="app-card">
+                    <div>
+                        <h3>Tokenisation across languages</h3>
+                        <p>Train a small BPE tokenizer with different language balances and compare how the same sentences are split.</p>
+                    </div>
+                    <a href="module_4/4A_tokenisation_across_languages.html" class="btn-uga" aria-label="Launch Activity 4A: Tokenisation across languages">Launch App</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="week-section">
+            <h2>Module 8</h2>
+            <div class="app-grid">
+                <div class="app-card">
+                    <div>
+                        <h3>Mini-applet: RNN decoding</h3>
+                        <p>See how decoder RNNs generate language.</p>
+                    </div>
+                    <a href="module_8/8A_RNN_decoder.html" class="btn-uga">Launch App</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="week-section">
+            <h2>Module 9: Learning in human and AI</h2>
+            <div class="app-grid">
+                <div class="app-card">
+                    <div>
+                        <h3>Under the hood</h3>
+                        <p>Look at how conversations are represented by computers.</p>
+                    </div>
+                    <a href="module_9/9A_tokens.html" class="btn-uga" aria-label="Launch Activity 9A: Under the Hood">Launch App</a>
+                </div>
+                <div class="app-card">
+                    <div>
+                        <h3>LLM parameter size</h3>
+                        <p>Compare LLMs of different parameter size. [Coming Soon]</p>
+                    </div>
+                    <a href="https://alive-tricky-business.anvil.app/" class="btn-uga">Launch App</a>
+                </div>
+                <div class="app-card">
+                    <div>
+                        <h3>Mini-applet: Transformer decoding</h3>
+                        <p>See how decoder-only transformers generate language.</p>
+                    </div>
+                    <a href="module_9/9B_Transformer_decoder.html" class="btn-uga">Launch App</a>
+                </div>
+                <div class="app-card">
+                    <div>
+                        <h3>Pretrained language models</h3>
+                        <p>See how pretrained language models work.</p>
+                    </div>
+                    <a href="https://grounded-soggy-spoonbill.anvil.app/" class="btn-uga">Launch App</a>
+                </div>
+                <div class="app-card">
+                    <div>
+                        <h3>Human feedback and RLHF</h3>
+                        <p>Try your hand at being a crowdworker producing preference data for RLHF.</p>
+                    </div>
+                    <a href="module_9/9C_rlhf_try.html" class="btn-uga" aria-label="Launch Activity 9C: Understanding RLHF">Launch App</a>
+                </div>
+                <div class="app-card">
+                    <div>
+                        <h3>RLHF under the hood</h3>
+                        <p>Explore how RLHF works under the hood, and how reward hacking occurs.</p>
+                    </div>
+                    <a href="module_9/9D_rlhf_rewards.html" class="btn-uga" aria-label="Launch Activity 9D: RLHF Process and Reward Hacking">Launch App</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="week-section">
+            <h2>Module 10: Processes in conversational AI</h2>
+            <div class="app-grid">
+                <div class="app-card">
+                    <div>
+                        <h3>Modular Conversational AI systems</h3>
+                        <p>Explore the basic five-stage conversational AI pipeline.</p>
+                    </div>
+                    <a href="module_10/10A_five_stage_pipeline.html" class="btn-uga" aria-label="Launch Activity 10A: Modular Conversational AI systems">Launch App</a>
+                </div>
+                <div class="app-card">
+                    <div>
+                        <h3>Intent Recognition</h3>
+                        <p>Try out a sample intent recognition system.</p>
+                    </div>
+                    <a href="module_10/10B_intent.html" class="btn-uga" aria-label="Launch Activity 10B: Recognizing Intents">Launch App</a>
+                </div>
+                <div class="app-card">
+                    <div>
+                        <h3>Entities and coreference</h3>
+                        <p>Try out a system for dealing with named entities and coreference.</p>
+                    </div>
+                    <a href="module_10/10C_coref.html" class="btn-uga" aria-label="Launch Activity 10C: Recognizing Coreference">Launch App</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="week-section">
+            <h2>For instructors</h2>
+            <div class="app-grid">
+                <div class="app-card">
+                    <div>
+                        <h3>Applet template &amp; style guide</h3>
+                        <p>A walkthrough of the page format, color scheme, widgets, and accessibility rules, for building a new activity.</p>
+                    </div>
+                    <a href="template/applet_template.html" class="btn-uga">View template</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+</body>
+</html>

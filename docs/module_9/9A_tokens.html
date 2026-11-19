@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity 9A: Under the Hood</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;0,800;1,400&family=Merriweather+Sans:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../style.css" rel="stylesheet">
+    <style>
+        /* Conversation + composer use the shared .chat-log / .chat-turn / .chat-compose
+           components from style.css; only the fixed height is specific to this layout. */
+        #chat-box { height: 350px; max-height: none; margin-bottom: 0; }
+        .debug-view { background: #1a1a1a; color: #00ff41; padding: 20px; font-family: 'Fira Code', monospace; font-size: 0.8rem; border-radius: 8px; min-height: 400px; border: 1px solid #333; }
+        .token { display: inline-block; border: 1px solid #444; padding: 2px 5px; margin: 2px; color: #111; background: #222; border-radius: 3px; font-weight: 600; }
+
+        /* ---- Token-highlight palette ----
+           Same class (tok-c0..tok-c7) is reused on both the raw-string
+           spans AND the token-id chips below, so a learner can visually
+           match a highlighted chunk of text to its numeric id. Colors are
+           chosen to stay legible with dark (#111) text on top -- all 8
+           checked at 6.6:1+ contrast against #111 text (WCAG AA needs
+           4.5:1 for this text size). */
+        #raw-string span[class*="tok-c"],
+        #token-ids span[class*="tok-c"] {
+            color: #111;
+        }
+        #raw-string span[class*="tok-c"] {
+            padding: 1px 0;
+            border-radius: 2px;
+            white-space: pre-wrap;
+        }
+        .tok-c0 { background: #ff6b6b; }
+        .tok-c1 { background: #feca57; }
+        .tok-c2 { background: #1dd1a1; }
+        .tok-c3 { background: #54a0ff; }
+        .tok-c4 { background: #ff9ff3; }
+        .tok-c5 { background: #c8d6e5; }
+        .tok-c6 { background: #f368e0; }
+        .tok-c7 { background: #00d2d3; }
+
+        /* Bootstrap's text-secondary (#6c757d) is tuned for light
+           backgrounds -- on the dark .debug-view bg it only reaches
+           ~3.7:1, below the 4.5:1 AA minimum. This is a lighter gray
+           calibrated for that dark background instead (~6.65:1). */
+        .debug-label {
+            color: #a0a0a0;
+        }
+
+        /* #888 on #1a1a1a is ~4.9:1 -- technically AA but with almost no
+           margin for such small (0.7rem) italic text. Bumped for safety. */
+        .tok-legend {
+            font-size: 0.7rem;
+            color: #b0b0b0;
+            margin-top: 10px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    
+<header class="page-header">
+    <h1><a href="https://linguistics.uga.edu/">University of Georgia</a></h1>
+    <h2><a href="../index.html">Quantitative Linguistics Webapps</a></h2>
+</header>
+
+<main>
+
+<section class="lesson-container" aria-labelledby="activity-title">
+    <h3 id="activity-title" class="h3 mb-4">Activity 9A: Under the Hood</h3>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <h4 class="uga-accent">Learning Objectives</h4>
+            <ul>
+                <li><strong>Describe</strong> how texts are underlyingly represented by tokens in modern language models.</li>
+                <li><strong>Compare</strong> how humans and LLMs perceive language.</li>
+            </ul>
+        </div>
+
+        <div class="col-md-12">
+            <h4 class="uga-accent">Background</h4>
+            <p>
+            This activity shows you how modern LLMs represent language. Texts are divided into units called tokens, which cannot be furthe
+            broken down. These tokens are then represented by numbers starting from 0.
+
+            These numbers are the objects that are input into language models and output from language models.
+            </p>
+        </div>
+        <div class="col-md-12">
+            <h4 class="uga-accent">Instructions</h4>
+          
+            <ol>
+                <li>Wait for the LLM to finish loading. It will take a while!</li>
+                <li>Type a message in the textbox under 'Student View', then hit 'Add'. Your message should appear on the screen.</li>
+                <li>Wait for the LLM to respond. Do this a few times as you wish.</li>
+                <li>Look at 'Under the Hood', and think about how that differs from how humans think about language.</li>
+            </ol>
+        </div>
+    </div>
+</section>
+
+
+<section class="app-wrapper" aria-labelledby="applet-title">
+    <div class="hero">
+        <div class="hero-text">
+            <h2 id="applet-title" class="fw-bold mb-1">Looking inside chatbots</h2>
+        </div>
+    </div>
+    <p id="status" class="text-danger small fw-bold mb-3">INITIALIZING ONNX RUNTIME...</p>
+
+    <div class="row">
+        <div class="col-md-5">
+            <h3 class="fw-bold" style="font-size:medium">Student View</h3>
+            <div role="log" aria-label="Conversation updates"><ol id="chat-box" class="chat-log" aria-label="Conversation" tabindex="0"><li class="chat-empty">No messages yet — type one below.</li></ol></div>
+            <div class="chat-compose field">
+                <label for="user-input" class="visually-hidden">Your message</label>
+                <div class="chat-compose__row">
+                    <input type="text" id="user-input" placeholder="Type a message..." autocomplete="off">
+                    <button id="add-btn" type="button" class="btn-uga-dark">Add</button>
+                </div>
+                <div class="chat-compose__extras">
+                    <label><input type="checkbox" id="auto-gen-toggle" checked> Auto-generate response after adding a message</label>
+                </div>
+            </div>
+            <button id="gen-btn" type="button" class="btn-uga w-100 mt-2" disabled>LOAD MODEL</button>
+        </div>
+        <div class="col-md-7">
+            <h3 class="fw-bold" style="font-size:medium">"Under the Hood"</h3>
+            <div class="debug-view">
+                <div class="debug-label border-bottom border-secondary pb-2 mb-2">// RAW INPUT STRING</div>
+                <div id="raw-string" class="mb-4" style="white-space: pre-wrap;">Waiting for input...</div>
+                <div class="debug-label border-bottom border-secondary pb-2 mb-2">// TOKENIZED IDs</div>
+                <div id="token-ids">Waiting for input...</div>
+                <div class="tok-legend">Each color block = one token. Matching colors in the two panels above are the same token.</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<section class="reflection-container" aria-labelledby="reflection-title">
+    <h3 id="reflection-title" class="uga-accent mb-3">Reflection &amp; Discussion Guide</h3>
+    
+    <div class="row text-dark">
+      <div class="col-md-12">
+        Think about the following questions:
+      <ol>
+        <li> What tokens appear in addition to the text that you see directly in the chatroom interface? How are they useful?</li>
+        <li> Look at where the token-color boundaries fall in the raw string. Do they line up with whole words, sub-word pieces, or something else?</li>
+        <li> How might what you've seen here explain why ChatGPT doesn't know the number of 'r's in 'strawberry'?</li>
+        <li> How do you think this mode of thinking about language differs from how humans think of language?</li>
+     </ol>
+      </div>
+    </div>
+</section>
+
+</main>
+
+<section class="applet-feedback-card" aria-labelledby="applet-feedback-heading">
+  <div class="applet-feedback-card__content">
+    <div>
+      <h2 id="applet-feedback-heading">Help us improve this applet</h2>
+      <a class="applet-feedback-card__tutorial" href="https://kaltura.uga.edu/media/t/1_bhor4qfq" target="_blank" rel="noopener noreferrer">New to GitHub? Watch the one-minute account setup guide <span class="visually-hidden">(opens in a new tab)</span></a>
+    </div>
+    <a class="applet-feedback-card__button" href="https://github.com/uga-ling2150/applets/issues/new?template=applet-feedback.yml&amp;title=%5BApplet%20feedback%5D%20Activity%209A%3A%20Under%20the%20Hood&amp;applet=Activity%209A%3A%20Under%20the%20Hood&amp;source-url=https%3A%2F%2Fuga-ling2150.github.io%2Fapplets%2Fmodule_9%2F9A_tokens.html" target="_blank" rel="noopener noreferrer">Report a problem or give feedback <span class="visually-hidden">(opens in a new tab)</span></a>
+  </div>
+</section>
+
+    
+<script type="module">
+    // Upgraded from 3.0.0-alpha.19 (a very early alpha from the initial
+    // v3 development cycle) to the current stable v3 release -- the
+    // "Unsupported type for tensor data" crash in addPastKeyValues looks
+    // like exactly the kind of KV-cache bug that's been fixed since.
+    import { pipeline, AutoTokenizer, TextStreamer, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
+
+    // Force CPU/WASM and stay on main thread to avoid Worker SecurityErrors
+    // (this "proxy" is a separate mechanism from the WASM thread pool
+    // below, so it's safe to keep off while still enabling threads).
+    env.allowLocalModels = false;
+    env.backends.onnx.wasm.proxy = false;
+
+    // Multi-threaded WASM (SIMD + threads) needs SharedArrayBuffer, which
+    // is only available when the page is cross-origin isolated (COOP/COEP
+    // headers). Falls back to the safe single-threaded default otherwise.
+    // Only matters for the WASM fallback path below -- ignored on WebGPU.
+    if (typeof crossOriginIsolated !== 'undefined' && crossOriginIsolated) {
+        env.backends.onnx.wasm.numThreads = navigator.hardwareConcurrency || 4;
+    }
+
+    // NOTE: onnx-community/Supra-1.5-50M-Instruct-exp-ONNX turned out to be
+    // an incomplete auto-conversion -- it's missing tokenizer.json and has
+    // no q8 shard. Swapped to a well-established, similarly tiny (135M
+    // param) model with a full quantization ladder and a confirmed-working
+    // tokenizer instead.
+    const MODEL_ID = 'onnx-community/SmolLM2-135M-Instruct-ONNX';
+    const NUM_TOKEN_COLORS = 8;
+
+    let generator;
+    let tokenizer;
+    let messages = [];
+    let activeDevice = '';
+    let activeDtype = '';
+
+    function makeProgressCallback(device, dtype) {
+        // Tracks per-file progress so we can tell when every shard has
+        // actually finished downloading, vs. just the most recent one.
+        const fileProgress = {};
+        const label = `${device.toUpperCase()}/${dtype.toUpperCase()}`;
+        return (p) => {
+            if (p.status === 'ready') {
+                document.getElementById('status').innerText = `ONNX ENGINE READY (${label})`;
+                document.getElementById('gen-btn').disabled = false;
+                document.getElementById('gen-btn').innerText = 'GENERATE RESPONSE';
+            } else if (p.status === 'progress' || p.status === 'initiate' || p.status === 'done') {
+                const fileLabel = p.file ? p.file.split('/').pop() : 'shard';
+                const pct = p.status === 'done' ? 100 : Math.round(p.progress ?? 0);
+                fileProgress[fileLabel] = pct;
+
+                const allDone = Object.values(fileProgress).every(v => v >= 100);
+                if (allDone && Object.keys(fileProgress).length > 0) {
+                    // Downloads are done, but the model still needs to be
+                    // parsed into an ONNX Runtime / WebGPU session (graph
+                    // load + kernel setup). There's no byte-progress for
+                    // this step, so we just flag that it's happening.
+                    document.getElementById('status').innerText = `COMPILING MODEL (${label})...`;
+                } else {
+                    document.getElementById('status').innerText =
+                        `LOADING (${label})... ${fileLabel} ${pct}%`;
+                }
+            } else {
+                document.getElementById('status').innerText = `LOADING (${label})...`;
+            }
+        };
+    }
+
+    async function loadPipeline(device, dtype) {
+        return pipeline('text-generation', MODEL_ID, {
+            dtype,
+            device,
+            progress_callback: makeProgressCallback(device, dtype)
+        });
+    }
+
+    async function detectWebGPU() {
+        // navigator.gpu can exist even where there's no real adapter
+        // behind it (e.g. sandboxed preview iframes). Calling pipeline()
+        // with device:'webgpu' in that case doesn't just fail cleanly --
+        // it appears to leave onnxruntime-web's execution-provider state
+        // broken, which then also breaks the WASM fallback attempts. So
+        // probe for a real adapter first and never call pipeline() with
+        // device:'webgpu' unless one actually exists.
+        if (typeof navigator === 'undefined' || !navigator.gpu) return false;
+        try {
+            const adapter = await navigator.gpu.requestAdapter();
+            return !!adapter;
+        } catch (err) {
+            return false;
+        }
+    }
+
+    // Formats a caught value into something actually readable. Errors
+    // thrown from deep inside onnxruntime-web / the fetch-buffer code
+    // sometimes surface as a bare number or a non-Error object instead of
+    // a proper Error, which is why students were only ever seeing a raw
+    // byte count in the console with no indication of what failed.
+    function describeError(err) {
+        if (err instanceof Error) {
+            return `${err.name}: ${err.message}`;
+        }
+        if (typeof err === 'number') {
+            return `Non-Error failure (raw value: ${err}) -- likely a memory allocation limit hit while downloading/decoding model weights.`;
+        }
+        try {
+            return JSON.stringify(err);
+        } catch {
+            return String(err);
+        }
+    }
+
+    async function init() {
+        // WebGPU runs matrix multiplies on the GPU instead of single/
+        // multi-threaded WASM on the CPU -- typically several times
+        // faster for LLM inference. Try it first (with a quant level
+        // suited to GPU execution), then fall back through a WASM ladder
+        // for browsers/devices without a real WebGPU adapter.
+        const attempts = [];
+        if (await detectWebGPU()) {
+            attempts.push({ device: 'webgpu', dtype: 'q4f16' });
+            attempts.push({ device: 'webgpu', dtype: 'fp16' });
+        } else {
+            console.info('No WebGPU adapter available in this environment; using WASM.');
+        }
+        // WASM fallback ladder, ordered smallest-download-first (q4 -> q8
+        // -> fp16 -> fp32). Students were hitting load failures in real
+        // browsers on the hosted page, and every failed attempt -- across
+        // every dtype -- died at the *same* allocation size, which points
+        // to a memory ceiling rather than a bad file. Trying the smallest
+        // weights first maximizes the odds of a successful load on
+        // memory-constrained devices (older laptops, Chromebooks,
+        // tablets), at the cost of q4 being somewhat slower than q8 once
+        // it's actually running on plain WASM (no GPU kernels to
+        // accelerate 4-bit ops there). Reliability is worth that
+        // trade-off for a whole-class in-browser demo.
+        attempts.push({ device: 'wasm', dtype: 'q4' });
+        attempts.push({ device: 'wasm', dtype: 'q8' });
+        attempts.push({ device: 'wasm', dtype: 'fp16' });
+        attempts.push({ device: 'wasm', dtype: 'fp32' });
+
+        let lastErr;
+        for (const { device, dtype } of attempts) {
+            try {
+                generator = await loadPipeline(device, dtype);
+                activeDevice = device;
+                activeDtype = dtype;
+                lastErr = null;
+                break;
+            } catch (err) {
+                console.warn(`${device}/${dtype} unavailable, trying next option: ${describeError(err)}`, err);
+                lastErr = err;
+            }
+        }
+
+        if (lastErr) {
+            const detail = describeError(lastErr);
+            document.getElementById('status').innerText = `INIT ERROR: ${detail}`;
+            console.error('All device/dtype attempts failed:', lastErr);
+            return;
+        }
+
+        try {
+            tokenizer = await AutoTokenizer.from_pretrained(MODEL_ID);
+
+            // Surface the environment constraints that most affect speed --
+            // these don't throw errors, they just silently make inference
+            // slower, so they're easy to miss without checking explicitly.
+            const isolated = typeof crossOriginIsolated !== 'undefined' && crossOriginIsolated;
+            const threads = isolated ? (navigator.hardwareConcurrency || 4) : 1;
+            console.info(
+                `[diagnostics] device=${activeDevice} dtype=${activeDtype} ` +
+                `crossOriginIsolated=${isolated} wasmThreads=${threads} ` +
+                `navigator.gpu=${typeof navigator !== 'undefined' && !!navigator.gpu}`
+            );
+            const diag = document.getElementById('diagnostics');
+            if (diag) {
+                diag.innerText =
+                    `${activeDevice.toUpperCase()}/${activeDtype.toUpperCase()}, ` +
+                    `${threads} thread${threads === 1 ? '' : 's'}` +
+                    (isolated ? '' : ' (not cross-origin isolated -- threads capped at 1)');
+            }
+        } catch (err) {
+            document.getElementById('status').innerText = `INIT ERROR: ${describeError(err)}`;
+            console.error(err);
+        }
+    }
+
+
+
+    function escapeHtml(str) {
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
+    // Builds the exact string the model will actually receive (using the
+    // model's own chat template when available), then tokenizes THAT
+    // string and re-renders it as a sequence of colored spans -- one
+    // color per token -- so students can see tokenization happen inside
+    // the raw string itself, not just as a separate id list.
+    async function renderTokenizedView() {
+        let rawString;
+        try {
+            rawString = tokenizer.apply_chat_template(messages, {
+                tokenize: false,
+                add_generation_prompt: true
+            });
+        } catch (err) {
+            // Fallback to a manual ChatML-style rendering if the model's
+            // tokenizer has no chat template configured.
+            rawString = '';
+            messages.forEach(m => {
+                rawString += `<|im_start|>${m.role}\n${m.content}\n<|im_end|>\n`;
+            });
+            rawString += `<|im_start|>assistant\n`;
+        }
+
+        const { input_ids } = await tokenizer(rawString, { add_special_tokens: false });
+        const ids = Array.from(input_ids.data);
+
+        let rawHtml = '';
+        let idsHtml = '';
+        ids.forEach((id, i) => {
+            const colorClass = `tok-c${i % NUM_TOKEN_COLORS}`;
+            const piece = tokenizer.decode([id], { skip_special_tokens: false });
+            const displayPiece = piece.length ? escapeHtml(piece) : '\u2205'; // empty-set sign for empty pieces
+            rawHtml += `<span class="${colorClass}" title="id ${id}">${displayPiece}</span>`;
+            idsHtml += `<span class="token ${colorClass}">${id}</span>`;
+        });
+
+        document.getElementById('raw-string').innerHTML = rawHtml || 'Waiting for input...';
+        document.getElementById('token-ids').innerHTML = idsHtml || 'Waiting for input...';
+    }
+
+    async function refreshUI() {
+        const box = document.getElementById('chat-box');
+        box.innerHTML = '';
+        if (!messages.length) {
+            box.innerHTML = '<li class="chat-empty">No messages yet — type one below.</li>';
+        }
+        messages.forEach((m, i) => {
+            const isUser = m.role === 'user';
+            const turn = document.createElement('li');
+            turn.className = `chat-turn ${isUser ? 'human' : 'ai'}`;
+            const who = document.createElement('span');
+            who.className = 'chat-turn__speaker';
+            who.textContent = `${i + 1}. ${isUser ? 'You' : 'AI'}`;
+            const text = document.createElement('p');
+            text.className = 'chat-turn__text';
+            text.textContent = m.content;
+            turn.append(who, text);
+            box.appendChild(turn);
+        });
+        box.scrollTop = box.scrollHeight;
+
+        if (messages.length > 0) {
+            await renderTokenizedView();
+        }
+    }
+
+    async function addMessage() {
+        const input = document.getElementById('user-input');
+        const val = input.value.trim();
+        if (val) {
+            messages.push({ role: 'user', content: val });
+            input.value = '';
+            await refreshUI();
+
+            const autoGenOn = document.getElementById('auto-gen-toggle').checked;
+            const btn = document.getElementById('gen-btn');
+            if (autoGenOn && !btn.disabled) {
+                await generateResponse();
+            }
+        }
+    }
+
+    document.getElementById('add-btn').onclick = addMessage;
+
+    // Let students hit Enter in the message box instead of having to
+    // reach for the "Add" button every time.
+    document.getElementById('user-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addMessage();
+        }
+    });
+
+    async function generateResponse() {
+        const btn = document.getElementById('gen-btn');
+        if (btn.disabled) return; // model not ready yet, or a generation is already in flight
+        btn.disabled = true;
+        btn.innerText = "RUNNING INFERENCE...";
+
+        // Stream tokens into an empty bubble as they're generated instead
+        // of waiting silently for the whole reply -- same total time on
+        // slow (WASM) backends, but feels far more responsive, and on
+        // WebGPU the first tokens genuinely do arrive much sooner.
+        // Show a thinking indicator immediately -- there's real latency
+        // between hitting generate and the first token arriving (prompt
+        // processing / prefill), which otherwise just looks like nothing
+        // is happening.
+        const box = document.getElementById('chat-box');
+        const turn = document.createElement('li');
+        turn.className = 'chat-turn ai thinking';
+        const who = document.createElement('span');
+        who.className = 'chat-turn__speaker';
+        who.textContent = `${messages.length + 1}. AI`;
+        const bubble = document.createElement('p');
+        bubble.className = 'chat-turn__text';
+        bubble.innerHTML = '<span class="thinking-dots"><span></span><span></span><span></span></span>';
+        turn.append(who, bubble);
+        box.appendChild(turn);
+        box.scrollTop = box.scrollHeight;
+
+        let streamedText = '';
+        let firstTokenReceived = false;
+
+        // Prompt processing (prefill) on plain WASM/CPU can genuinely take
+        // a while for the very first token. Rather than a single static
+        // message, tick a live elapsed-seconds counter so it's obvious
+        // whether it's genuinely still working or has actually frozen --
+        // a number that keeps climbing is very different from one that's
+        // stuck.
+        const genStartedAt = performance.now();
+        console.time('[gen] time-to-first-token');
+        const stillWorkingTimer = setInterval(() => {
+            const elapsedSec = Math.round((performance.now() - genStartedAt) / 1000);
+            document.getElementById('status').innerText =
+                `GENERATING (${activeDevice.toUpperCase()}/${activeDtype.toUpperCase()}) -- ${elapsedSec}s elapsed...`;
+        }, 1000);
+
+        const streamer = new TextStreamer(tokenizer, {
+            skip_prompt: true,
+            skip_special_tokens: true,
+            callback_function: (chunk) => {
+                if (!firstTokenReceived) {
+                    firstTokenReceived = true;
+                    clearInterval(stillWorkingTimer);
+                    console.timeEnd('[gen] time-to-first-token');
+                    document.getElementById('status').innerText = `ONNX ENGINE READY (${activeDevice.toUpperCase()}/${activeDtype.toUpperCase()})`;
+                    turn.classList.remove('thinking');
+                    bubble.innerHTML = '';
+                    btn.innerText = "STREAMING RESPONSE...";
+                }
+                streamedText += chunk;
+                bubble.innerText = streamedText;
+                box.scrollTop = box.scrollHeight;
+            }
+        });
+
+        try {
+            const output = await generator(messages, { 
+                max_new_tokens: 60, 
+                temperature: 0.6, 
+                do_sample: true,
+                streamer
+            });
+
+            const reply = output[0].generated_text.at(-1).content;
+            messages.push({ role: 'assistant', content: reply });
+
+            await refreshUI(); // rebuilds chat-box (replacing the temp bubble) + tokenized view
+        } catch (err) {
+            // Without this, a crash mid-generation (e.g. an internal
+            // library error) leaves the elapsed-time counter ticking
+            // forever with no visible indication anything went wrong.
+            console.error('Generation failed:', err);
+            clearInterval(stillWorkingTimer);
+            turn.classList.remove('thinking');
+            bubble.innerText = `⚠️ Generation failed -- ${describeError(err)}`;
+            document.getElementById('status').innerText = `GENERATION ERROR: ${describeError(err)}`;
+        } finally {
+            clearInterval(stillWorkingTimer);
+            btn.disabled = false;
+            btn.innerText = "GENERATE RESPONSE";
+        }
+    }
+
+    document.getElementById('gen-btn').onclick = generateResponse;
+
+    init();
+</script>
+
+
+</body>
+</html>
