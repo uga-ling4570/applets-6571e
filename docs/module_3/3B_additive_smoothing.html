@@ -27,7 +27,7 @@
       <li><strong>Compare</strong> how different values of α change a probability distribution.</li>
     </ul>
     <h4 class="uga-accent">Background</h4>
-    <p>A bigram model predicts the next word from the previous word. Maximum likelihood estimation (MLE) divides each word-pair count by the total count for that context. A pair missing from the training data receives probability zero, even when it could occur.</p>
+    <p>A bigram model predicts the next word from the previous word. Maximum likelihood estimation (MLE) divides each word-pair count by the total count for that context. When the context has been observed, a word pair with a zero count receives MLE probability zero, even when it could occur.</p>
     <p>Additive smoothing adds a <em>pseudo-count</em> α to every candidate's count. It gives unseen pairs some probability while keeping the probabilities normalized. Setting α to 1 is called <em>add-one</em> or <em>Laplace</em> smoothing.</p>
     <h4 class="uga-accent">Instructions</h4>
     <ol>
@@ -129,7 +129,7 @@
           <div class="stage-content">
             <form id="quiz-1" class="smoothing-quiz" novalidate>
               <fieldset id="quiz-1-group" role="radiogroup" aria-required="true" aria-invalid="false" aria-labelledby="quiz-1-question" aria-describedby="quiz-1-hint quiz-1-feedback">
-                <legend id="quiz-1-question">1. After adding α to every candidate count, which denominator keeps the probabilities summing to 1?</legend>
+                <legend id="quiz-1-question">1. After adding α to every candidate count, which denominator keeps the probabilities summing to 1 for any value of α?</legend>
                 <p id="quiz-1-hint" class="smoothing-copy">Choose one answer before checking this question.</p>
                 <label class="smoothing-choice" for="denominator-total"><input id="denominator-total" type="radio" name="denominator" value="total-only" required><span>N + α</span></label>
                 <label class="smoothing-choice" for="denominator-correct"><input id="denominator-correct" type="radio" name="denominator" value="correct" required><span>N + αV</span></label>
