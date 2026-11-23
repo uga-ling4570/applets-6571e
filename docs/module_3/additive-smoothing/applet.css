@@ -39,9 +39,7 @@
 .smoothing-choice:has(input:disabled) { cursor: default; }
 .smoothing-quiz-feedback { font: 16px/1.6 "Merriweather Sans", sans-serif; margin-bottom: 0; }
 .smoothing-quiz-feedback:not(:empty) { padding: 14px 16px; border: 1px solid var(--border-strong); border-left: 4px solid var(--olympic); border-radius: 0 6px 6px 0; background: var(--panel-alt); }
-.applet-feedback-card .smoothing-feedback-note, .smoothing-feedback-steps { font: 16px/1.6 "Merriweather Sans", sans-serif; margin: 20px 0 0; }
-.smoothing-feedback-steps { padding-left: 24px; }
-.smoothing-feedback-steps li + li { margin-top: 8px; }
+.applet-feedback-card .smoothing-feedback-note { font: 16px/1.6 "Merriweather Sans", sans-serif; margin: 8px 0 0; }
 @media (max-width: 760px) {
   .smoothing-charts { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .smoothing-totals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
