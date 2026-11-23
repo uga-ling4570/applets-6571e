@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Activity 3B: Additive Smoothing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;0,800;1,400&family=Merriweather+Sans:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="additive-smoothing/applet.css">
+</head>
+<body class="page--responsive-cards page--compact-end">
+<a class="skip-link" href="#main">Skip to activity</a>
+<header class="page-header">
+  <h1><a href="https://linguistics.uga.edu/">University of Georgia</a></h1>
+  <h2><a href="../index.html">Quantitative Linguistics Webapps</a></h2>
+</header>
+<main id="main" tabindex="-1">
+  <section class="lesson-container" aria-labelledby="activity-title">
+    <h3 id="activity-title" class="h3 mb-4">Activity 3B: Additive Smoothing</h3>
+    <h4 class="uga-accent">Learning Objectives</h4>
+    <ul>
+      <li><strong>Explain</strong> why a zero count produces a zero probability in maximum likelihood estimation.</li>
+      <li><strong>Calculate</strong> add-α probabilities and explain why the denominator increases by αV.</li>
+      <li><strong>Compare</strong> how different values of α change a probability distribution.</li>
+    </ul>
+    <h4 class="uga-accent">Background</h4>
+    <p>A bigram model predicts the next word from the previous word. Maximum likelihood estimation (MLE) divides each word-pair count by the total count for that context. A pair missing from the training data receives probability zero, even when it could occur.</p>
+    <p>Additive smoothing adds a <em>pseudo-count</em> α to every candidate's count. It gives unseen pairs some probability while keeping the probabilities normalized. Setting α to 1 is called <em>add-one</em> or <em>Laplace</em> smoothing.</p>
+    <h4 class="uga-accent">Instructions</h4>
+    <ol>
+      <li>Inspect the four counts after <strong>study</strong>, then try α = 0.1, 0.5 and 1.</li>
+      <li>Compare the charts, table and worked calculation. Track the word with a zero count.</li>
+      <li>Check your understanding, then use the reflection questions to explain the changes.</li>
+    </ol>
+  </section>
+
+  <section class="app-wrapper smoothing-app" aria-labelledby="applet-title">
+    <div class="hero hero--text-only">
+      <div class="hero-text">
+        <h2 id="applet-title">Give unseen pairs <span>a chance</span></h2>
+        <p>Follow one distribution from raw counts to smoothed probabilities.</p>
+      </div>
+    </div>
+    <noscript><p class="error-text">Enable JavaScript to adjust α and check your answers.</p></noscript>
+    <div class="rack">
+      <section class="stage active" aria-labelledby="stage1-title">
+        <div class="stage-num" aria-hidden="true">1</div>
+        <div class="stage-body">
+          <h3 id="stage1-title" class="stage-title stage-title--sentence-case">Choose a smoothing strength</h3>
+          <div class="stage-content">
+            <p>Imagine a tiny prediction task after the word <strong>study</strong>. Its fixed prediction vocabulary contains only <strong>language, speech, syntax and meaning</strong>. Their observed counts are <strong>6, 3, 1 and 0</strong>, so N = 10 and V = 4.</p>
+            <p>This demonstration shows only that one row of a bigram model. <strong>Meaning is in the vocabulary but has not followed study in the training data.</strong> It is not an out-of-vocabulary word.</p>
+            <div class="alpha-controls">
+              <div class="field">
+                <label for="alpha-slider">Adjust α (alpha)</label>
+                <input id="alpha-slider" type="range" min="0" max="10" step="0.1" value="0" aria-describedby="alpha-help">
+              </div>
+              <div class="field">
+                <label for="alpha">α value</label>
+                <input id="alpha" type="number" min="0" max="10" step="0.1" value="0" inputmode="decimal" aria-describedby="alpha-help error" aria-invalid="false">
+              </div>
+            </div>
+            <p id="alpha-help" class="smoothing-copy">Use 0 to 10 in steps of 0.1. α = 0 gives MLE; α = 1 gives Laplace smoothing.</p>
+            <div class="btn-row" role="group" aria-label="Common alpha values">
+              <button class="btn-uga-outline" type="button" data-alpha="0" aria-pressed="true">α = 0</button>
+              <button class="btn-uga-outline" type="button" data-alpha="0.1" aria-pressed="false">α = 0.1</button>
+              <button class="btn-uga-outline" type="button" data-alpha="0.5" aria-pressed="false">α = 0.5</button>
+              <button class="btn-uga-outline" type="button" data-alpha="1" aria-pressed="false">α = 1</button>
+            </div>
+            <p id="error" class="error-text" role="alert"></p>
+            <p id="parameter-status" class="field-hint" role="status" aria-live="polite"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="stage" aria-labelledby="stage2-title">
+        <div class="stage-num" aria-hidden="true">2</div>
+        <div class="stage-body">
+          <h3 id="stage2-title" class="stage-title stage-title--sentence-case">Compare the probabilities</h3>
+          <div class="stage-content">
+            <p id="current-alpha" class="smoothing-current">Charts show α = 0.</p>
+            <p>Both charts use a <strong>0–100% scale</strong>. Each label gives the probability to two decimal places; the bars show the same values visually.</p>
+            <div class="smoothing-charts" id="probability-charts">
+              <section class="smoothing-chart" aria-labelledby="mle-heading">
+                <h4 id="mle-heading">MLE (counts only)</h4>
+                <div id="mle-chart"></div>
+              </section>
+              <section class="smoothing-chart" aria-labelledby="smoothed-heading">
+                <h4 id="smoothed-heading">Add-α smoothing</h4>
+                <div id="smoothed-chart"></div>
+              </section>
+            </div>
+            <p id="distribution-insight" class="smoothing-insight"></p>
+            <dl class="smoothing-totals">
+              <div><dt>Observed total N</dt><dd id="observed-total">10</dd></div>
+              <div><dt>Vocabulary size V</dt><dd id="vocabulary-size">4</dd></div>
+              <div><dt>New denominator</dt><dd id="denominator">10 + 0 × 4 = 10</dd></div>
+            </dl>
+            <p>α is an added pseudo-count for <strong>each of the four candidates</strong>, not an extra observed occurrence. The new total is N + αV because four candidates each receive α.</p>
+            <div class="smoothing-table-scroll" role="region" aria-label="Probability table; scroll horizontally on narrow screens" tabindex="0">
+              <table id="distribution-table" class="smoothing-table">
+                <caption>Probabilities after study for the fixed four-word vocabulary</caption>
+                <thead><tr><th scope="col">Word</th><th scope="col">Count</th><th scope="col">Count + α</th><th scope="col">MLE</th><th scope="col">Smoothed</th><th scope="col">Change (percentage points)</th></tr></thead>
+                <tbody id="distribution-rows"></tbody>
+                <tfoot><tr><th scope="row">Total</th><td id="table-count-total">10</td><td id="table-pseudo-total">10</td><td id="table-mle-total">100.00%</td><td id="table-smoothed-total">100.00%</td><td id="table-delta-total">0.00</td></tr></tfoot>
+              </table>
+            </div>
+            <p class="smoothing-copy">Probabilities are rounded for display; calculations use full precision.</p>
+            <div class="smoothing-calculation">
+              <h4>Work through one word</h4>
+              <div class="field">
+                <label for="word-selection">Word to calculate</label>
+                <select id="word-selection"><option value="language">language</option><option value="speech">speech</option><option value="syntax">syntax</option><option value="meaning">meaning</option></select>
+              </div>
+              <p class="smoothing-formula">P<sub>α</sub>(word | study) = (count + α) / (N + αV)</p>
+              <p id="worked-formula" class="smoothing-worked"></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="stage" aria-labelledby="stage3-title">
+        <div class="stage-num" aria-hidden="true">3</div>
+        <div class="stage-body">
+          <h3 id="stage3-title" class="stage-title stage-title--sentence-case">Check your understanding</h3>
+          <div class="stage-content">
+            <form id="quiz-1" class="smoothing-quiz" novalidate>
+              <fieldset id="quiz-1-group" role="radiogroup" aria-required="true" aria-invalid="false" aria-labelledby="quiz-1-question" aria-describedby="quiz-1-hint quiz-1-feedback">
+                <legend id="quiz-1-question">1. After adding α to every candidate count, which denominator keeps the probabilities summing to 1?</legend>
+                <p id="quiz-1-hint" class="smoothing-copy">Choose one answer before checking this question.</p>
+                <label class="smoothing-choice" for="denominator-total"><input id="denominator-total" type="radio" name="denominator" value="total-only" required><span>N + α</span></label>
+                <label class="smoothing-choice" for="denominator-correct"><input id="denominator-correct" type="radio" name="denominator" value="correct" required><span>N + αV</span></label>
+                <label class="smoothing-choice" for="denominator-vocab"><input id="denominator-vocab" type="radio" name="denominator" value="vocab-only" required><span>N + V</span></label>
+              </fieldset>
+              <div class="btn-row"><button id="quiz-1-check" class="btn-uga" type="submit">Check answer 1</button><button id="quiz-1-retry" class="btn-uga-outline" type="button" hidden>Retry question 1</button></div>
+              <p id="quiz-1-feedback" class="smoothing-quiz-feedback" role="status" aria-live="polite"></p>
+            </form>
+            <form id="quiz-2" class="smoothing-quiz" novalidate>
+              <fieldset id="quiz-2-group" role="radiogroup" aria-required="true" aria-invalid="false" aria-labelledby="quiz-2-question" aria-describedby="quiz-2-hint quiz-2-feedback">
+                <legend id="quiz-2-question">2. As α becomes very large, what does this four-word distribution approach?</legend>
+                <p id="quiz-2-hint" class="smoothing-copy">Choose one answer before checking this question.</p>
+                <label class="smoothing-choice" for="convergence-zero"><input id="convergence-zero" type="radio" name="convergence" value="zero" required><span>Zero probability for every word</span></label>
+                <label class="smoothing-choice" for="convergence-correct"><input id="convergence-correct" type="radio" name="convergence" value="correct" required><span>A uniform distribution: 25% for each word</span></label>
+                <label class="smoothing-choice" for="convergence-winner"><input id="convergence-winner" type="radio" name="convergence" value="winner" required><span>100% probability for the most frequent word</span></label>
+              </fieldset>
+              <div class="btn-row"><button id="quiz-2-check" class="btn-uga" type="submit">Check answer 2</button><button id="quiz-2-retry" class="btn-uga-outline" type="button" hidden>Retry question 2</button></div>
+              <p id="quiz-2-feedback" class="smoothing-quiz-feedback" role="status" aria-live="polite"></p>
+            </form>
+            <div class="btn-row"><button id="reset" class="btn-reset" type="button">Reset activity</button></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <section class="reflection-container" aria-labelledby="reflection-title">
+    <h3 id="reflection-title" class="uga-accent mb-3">Reflection &amp; Discussion Guide</h3>
+    <ol>
+      <li>Compare meaning at α = 0 and α = 1. Why does an unseen pair receive a positive probability after smoothing?</li>
+      <li>At α = 1, compare language and syntax with their MLE probabilities. Why can an already observed word's probability increase?</li>
+      <li>Try α = 10. How does the result illustrate the trade-off between preserving observed frequencies and giving unseen events a chance?</li>
+    </ol>
+    <div class="reflection-notes field">
+      <label for="reflection">Write down your thoughts</label>
+      <textarea id="reflection" rows="5" maxlength="4000"></textarea>
+      <div class="btn-row"><button class="btn-uga" type="button" data-download-notes>Download my notes</button><span class="field-hint" role="status" data-download-status></span></div>
+      <p class="field-hint">Your notes stay in this browser and are not submitted to your instructor. Download them before you close this page.</p>
+    </div>
+  </section>
+</main>
+
+<section class="applet-feedback-card applet-feedback-card--followed" aria-labelledby="applet-feedback-heading">
+  <div class="applet-feedback-card__content">
+    <div>
+      <h2 id="applet-feedback-heading">Help us improve this applet</h2>
+      <a class="applet-feedback-card__tutorial" href="https://kaltura.uga.edu/media/t/1_bhor4qfq" target="_blank" rel="noopener noreferrer">New to GitHub? Watch the setup video <span class="visually-hidden">(opens in a new tab)</span></a>
+    </div>
+    <a class="applet-feedback-card__button" href="https://github.com/uga-ling4570/applets-6571e/issues/new?template=applet-feedback.yml&amp;title=%5BApplet%20feedback%5D%20Activity%203B%3A%20Additive%20Smoothing&amp;applet=Activity%203B%3A%20Additive%20Smoothing&amp;source-url=https%3A%2F%2Fuga-ling4570.github.io%2Fapplets-6571e%2Fmodule_3%2F3B_additive_smoothing.html" target="_blank" rel="noopener noreferrer">Report a problem or give feedback <span class="visually-hidden">(opens in a new tab)</span></a>
+  </div>
+</section>
+<footer class="source-card" aria-labelledby="sources-title">
+  <h3 id="sources-title">Sources &amp; permissions</h3>
+  <p>The smoothing formula follows Daniel Jurafsky and James H. Martin, <a href="https://web.stanford.edu/~jurafsky/slp3/3.pdf" target="_blank" rel="noopener noreferrer"><em>Speech and Language Processing</em>, Chapter 3, “N-gram Language Models” <span class="visually-hidden">(PDF, opens in a new tab)</span></a>. The four-word example and practice questions were created for this activity.</p>
+</footer>
+<script src="../reflection-notes.js" defer></script>
+<script src="additive-smoothing/core.js" defer></script>
+<script src="additive-smoothing/applet.js" defer></script>
+</body>
+</html>
