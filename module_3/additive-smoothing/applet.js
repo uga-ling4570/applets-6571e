@@ -6,7 +6,6 @@
   let current;
   const number = value => Number(value.toFixed(4)).toString();
   const percentage = value => `${(value * 100).toFixed(2)}%`;
-  const change = value => `${value > 0 ? '+' : ''}${(value * 100).toFixed(2)}`;
 
   function node(tag, text, className) {
     const element = document.createElement(tag);
@@ -33,7 +32,8 @@
 
   function renderFormula() {
     const row = current.rows.find(item => item.word === $('word-selection').value);
-    $('worked-formula').textContent = `P(${row.word} | study) = (${row.count} + ${number(current.alpha)}) / (${current.total} + ${number(current.alpha)} × ${current.vocabularySize}) = ${number(row.pseudoCount)} / ${number(current.denominator)} = ${row.smoothed.toFixed(4)} (${percentage(row.smoothed)}).`;
+    $('worked-formula').textContent = `P(${row.word} | study) = (${row.count} + ${number(current.alpha)}) / (${current.total} + ${number(current.alpha)} × ${current.vocabularySize}) = ${number(row.pseudoCount)} / ${number(current.denominator)} ≈ ${row.smoothed.toFixed(4)} (${percentage(row.smoothed)}).`;
+    $('worked-reconstituted').textContent = `Reconstituted count for ${row.word} = N × Pα(${row.word} | study) = ${current.total} × (${number(row.pseudoCount)} / ${number(current.denominator)}) ≈ ${number(row.reconstitutedCount)} (original count: ${row.count}).`;
   }
 
   function render() {
@@ -54,14 +54,14 @@
       const heading = node('th', row.word);
       heading.scope = 'row';
       tr.append(heading);
-      for (const value of [row.count, number(row.pseudoCount), percentage(row.mle), percentage(row.smoothed), change(row.delta)]) tr.append(node('td', value));
+      for (const value of [row.count, number(row.pseudoCount), percentage(row.mle), percentage(row.smoothed), number(row.reconstitutedCount)]) tr.append(node('td', value));
       body.append(tr);
     }
     $('table-count-total').textContent = current.total;
     $('table-pseudo-total').textContent = number(current.denominator);
     $('table-mle-total').textContent = percentage(current.rows.reduce((sum, row) => sum + row.mle, 0));
     $('table-smoothed-total').textContent = percentage(current.rows.reduce((sum, row) => sum + row.smoothed, 0));
-    $('table-delta-total').textContent = '0.00';
+    $('table-reconstituted-total').textContent = current.total;
     document.querySelectorAll('[data-alpha]').forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.alpha) === current.alpha)));
     renderFormula();
   }

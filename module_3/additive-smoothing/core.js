@@ -83,7 +83,9 @@
       const mle = mleDefined ? count / total : null;
       const smoothed = denominator > 0 ? pseudoCount / denominator : null;
       const delta = mle !== null && smoothed !== null ? smoothed - mle : null;
-      return {word, count, pseudoCount, mle, smoothed, delta};
+      // Express the smoothed probability on the original context's count scale.
+      const reconstitutedCount = smoothed === null ? null : total * smoothed;
+      return {word, count, pseudoCount, mle, smoothed, delta, reconstitutedCount};
     });
     return {rows, total, vocabularySize, alpha, denominator, mleDefined};
   }

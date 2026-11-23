@@ -29,6 +29,7 @@
     <h4 class="uga-accent">Background</h4>
     <p>A bigram model predicts the next word from the previous word. Maximum likelihood estimation (MLE) divides each word-pair count by the total count for that context. When the context has been observed, a word pair with a zero count receives MLE probability zero, even when it could occur.</p>
     <p>Additive smoothing adds a <em>pseudo-count</em> α to every candidate's count. It gives unseen pairs some probability while keeping the probabilities normalized. Setting α to 1 is called <em>add-one</em> or <em>Laplace</em> smoothing.</p>
+    <p>Module 3.4 uses <code>&lt;UNK&gt;</code> to represent out-of-vocabulary words. This applet focuses on a different problem: unseen combinations of words already in a fixed vocabulary.</p>
     <h4 class="uga-accent">Instructions</h4>
     <ol>
       <li>Inspect the four counts after <strong>study</strong>, then try α = 0.1, 0.5 and 1.</li>
@@ -51,7 +52,7 @@
         <div class="stage-body">
           <h3 id="stage1-title" class="stage-title stage-title--sentence-case">Choose a smoothing strength</h3>
           <div class="stage-content">
-            <p>Imagine a tiny prediction task after the word <strong>study</strong>. Its fixed prediction vocabulary contains only <strong>language, speech, syntax and meaning</strong>. Their observed counts are <strong>6, 3, 1 and 0</strong>, so N = 10 and V = 4.</p>
+            <p>Imagine a tiny prediction task after the word <strong>study</strong>. Its fixed prediction vocabulary contains only <strong>language, speech, syntax and meaning</strong>. Their observed counts are <strong>6, 3, 1 and 0</strong>, so the context total is <strong>N = C(study) = 10</strong> and V = 4.</p>
             <p>This demonstration shows only that one row of a bigram model. <strong>Meaning is in the vocabulary but has not followed study in the training data.</strong> It is not an out-of-vocabulary word.</p>
             <div class="alpha-controls">
               <div class="field">
@@ -103,12 +104,13 @@
             <div class="smoothing-table-scroll" role="region" aria-label="Probability table; scroll horizontally on narrow screens" tabindex="0">
               <table id="distribution-table" class="smoothing-table">
                 <caption>Probabilities after study for the fixed four-word vocabulary</caption>
-                <thead><tr><th scope="col">Word</th><th scope="col">Count</th><th scope="col">Count + α</th><th scope="col">MLE</th><th scope="col">Smoothed</th><th scope="col">Change (percentage points)</th></tr></thead>
+                <thead><tr><th scope="col">Word</th><th scope="col">Count</th><th scope="col">Count + α</th><th scope="col">MLE</th><th scope="col">Smoothed</th><th scope="col">Reconstituted count (N × P<sub>α</sub>)</th></tr></thead>
                 <tbody id="distribution-rows"></tbody>
-                <tfoot><tr><th scope="row">Total</th><td id="table-count-total">10</td><td id="table-pseudo-total">10</td><td id="table-mle-total">100.00%</td><td id="table-smoothed-total">100.00%</td><td id="table-delta-total">0.00</td></tr></tfoot>
+                <tfoot><tr><th scope="row">Total</th><td id="table-count-total">10</td><td id="table-pseudo-total">10</td><td id="table-mle-total">100.00%</td><td id="table-smoothed-total">100.00%</td><td id="table-reconstituted-total">10</td></tr></tfoot>
               </table>
             </div>
-            <p class="smoothing-copy">Probabilities are rounded for display; calculations use full precision.</p>
+            <p><strong>Count + α</strong> is the temporary inflated count used to calculate the probability. A <strong>reconstituted count</strong> multiplies that probability by the original context total N. It puts the result back on the original count scale: the reconstituted counts sum to N = 10, and are not new observations.</p>
+            <p class="smoothing-copy">Values are rounded for display; calculations use full precision.</p>
             <div class="smoothing-calculation">
               <h4>Work through one word</h4>
               <div class="field">
@@ -117,7 +119,14 @@
               </div>
               <p class="smoothing-formula">P<sub>α</sub>(word | study) = (count + α) / (N + αV)</p>
               <p id="worked-formula" class="smoothing-worked"></p>
+              <p id="worked-reconstituted" class="smoothing-worked"></p>
             </div>
+            <details id="course-example" class="glossary-box">
+              <summary class="summary--sentence-case">Why can add-one smoothing be too strong?</summary>
+              <p>The slider controls the four-word example. This separate example from Module 3.4 is fixed at <strong>α = 1</strong> and uses the restaurant corpus's full vocabulary of <strong>V = 1,446</strong> word types.</p>
+              <p>After <strong>want</strong>, the original context total is 927 and <strong>to</strong> was observed 608 times. MLE gives 608 / 927 ≈ <strong>65.59%</strong>. Add-one smoothing gives (608 + 1) / (927 + 1,446) = 609 / 2,373 ≈ <strong>25.66%</strong>. The reconstituted count is 927 × (609 / 2,373) ≈ <strong>237.90</strong>, or about 238, compared with the original 608.</p>
+              <p>The αV = 1,446 imaginary tokens outnumber the 927 real context occurrences. Giving every candidate an extra count then allocates too much probability mass to unseen combinations, sharply reducing the mass left for common ones. More smoothing is not necessarily better.</p>
+            </details>
           </div>
         </div>
       </section>
@@ -160,7 +169,7 @@
     <h3 id="reflection-title" class="uga-accent mb-3">Reflection &amp; Discussion Guide</h3>
     <ol>
       <li>Compare meaning at α = 0 and α = 1. Why does an unseen pair receive a positive probability after smoothing?</li>
-      <li>At α = 1, compare language and syntax with their MLE probabilities. Why can an already observed word's probability increase?</li>
+      <li>At α = 1, language has an inflated count of 7 and a reconstituted count of 5, compared with its original count of 6. Why do the inflated and reconstituted counts tell different stories?</li>
       <li>Try α = 10. How does the result illustrate the trade-off between preserving observed frequencies and giving unseen events a chance?</li>
     </ol>
     <div class="reflection-notes field">
@@ -183,7 +192,7 @@
 </section>
 <footer class="source-card" aria-labelledby="sources-title">
   <h3 id="sources-title">Sources &amp; permissions</h3>
-  <p>The smoothing formula follows Daniel Jurafsky and James H. Martin, <a href="https://web.stanford.edu/~jurafsky/slp3/3.pdf" target="_blank" rel="noopener noreferrer"><em>Speech and Language Processing</em>, Chapter 3, “N-gram Language Models” <span class="visually-hidden">(PDF, opens in a new tab)</span></a>. The four-word example and practice questions were created for this activity.</p>
+  <p>The smoothing formula and restaurant-corpus example follow Daniel Jurafsky and James H. Martin, <a href="https://web.stanford.edu/~jurafsky/slp3/3.pdf" target="_blank" rel="noopener noreferrer"><em>Speech and Language Processing</em>, Chapter 3, “N-gram Language Models” <span class="visually-hidden">(PDF, opens in a new tab)</span></a>. The restaurant example also appears in course Module 3.4. The four-word example and practice questions were created for this activity.</p>
 </footer>
 <script src="../reflection-notes.js" defer></script>
 <script src="additive-smoothing/core.js" defer></script>
