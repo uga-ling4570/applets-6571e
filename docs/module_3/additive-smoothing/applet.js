@@ -97,7 +97,7 @@
   $('word-selection').addEventListener('change', renderFormula);
 
   const explanations = {
-    1: 'Each of V candidate counts receives α, so the sum of the new counts is N + αV. Here, α = 1 adds 4 pseudo-counts in total, changing the denominator from 10 to 14.',
+    1: 'Each of V candidate counts receives α, so the sum of the new counts is N + αV. For example, when α = 1, adding one to each candidate adds 4 pseudo-counts in total, changing the denominator from 10 to 14.',
     2: 'When α dominates the observed counts, each probability approaches α / (αV) = 1/V. With four candidates that is 25% each. A finite α moves the distribution toward uniformity; it does not make these unequal counts exactly equal.'
   };
 
