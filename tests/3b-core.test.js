@@ -24,6 +24,7 @@ test('alpha zero reproduces the MLE and preserves the zero-count candidate', () 
   assert.deepEqual(result.rows.map(row => row.word), words);
   assert.deepEqual(result.rows.map(row => row.mle), [0.6, 0.3, 0.1, 0]);
   assert.deepEqual(result.rows.map(row => row.smoothed), [0.6, 0.3, 0.1, 0]);
+  assert.deepEqual(result.rows.map(row => row.reconstitutedCount), counts);
   assert.ok(result.rows.every(row => row.delta === 0 && row.pseudoCount === row.count));
 });
 
@@ -36,6 +37,24 @@ test('Laplace smoothing adds one to every event and V to the context total', () 
   assert.ok(result.rows[2].delta > 0);
   assert.ok(result.rows[0].delta < 0);
   assert.ok(result.rows[3].smoothed > 0);
+});
+
+test('reconstituted Laplace counts use the original ten-token scale, not the inflated fourteen-token scale', () => {
+  const result = core.distribution(words, counts, 1);
+  [5, 20 / 7, 10 / 7, 5 / 7].forEach((count, i) => close(result.rows[i].reconstitutedCount, count));
+  close(result.rows.reduce((sum, row) => sum + row.reconstitutedCount, 0), 10);
+  assert.notEqual(result.rows[3].reconstitutedCount, result.rows[3].pseudoCount);
+});
+
+test('reconstituted counts preserve the original context total at all 101 legal UI alpha values', () => {
+  for (const data of [counts, [2, 1, 0, 0], [8, 0, 0, 0]]) {
+    const observedTotal = data.reduce((sum, count) => sum + count, 0);
+    for (let step = 0; step <= 100; step++) {
+      const result = core.distribution(words, data, step / 10);
+      close(result.rows.reduce((sum, row) => sum + row.reconstitutedCount, 0), observedTotal);
+      assert.ok(result.rows.every(row => row.reconstitutedCount >= 0));
+    }
+  }
 });
 
 test('probabilities sum to one across sparse contexts and smoothing strengths', () => {
@@ -78,11 +97,12 @@ test('an unseen context has undefined MLE; positive alpha alone gives a uniform 
   assert.equal(unsmoothed.total, 0);
   assert.equal(unsmoothed.denominator, 0);
   assert.equal(unsmoothed.mleDefined, false);
-  assert.ok(unsmoothed.rows.every(row => row.mle === null && row.smoothed === null && row.delta === null));
+  assert.ok(unsmoothed.rows.every(row => row.mle === null && row.smoothed === null && row.delta === null && row.reconstitutedCount === null));
   for (const alpha of [0.1, 1, 10]) {
     const result = core.distribution(words, {}, alpha);
     assert.equal(result.mleDefined, false);
     assert.ok(result.rows.every(row => row.mle === null && row.delta === null && row.smoothed === 0.25));
+    assert.ok(result.rows.every(row => row.reconstitutedCount === 0));
   }
 });
 
