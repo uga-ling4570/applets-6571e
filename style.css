@@ -1,0 +1,1153 @@
+:root {
+  --uga-red: #ba0c2f;
+  --uga-black: #000000;
+  --uni-blue: #0055a4;
+  --muted-dim: #707070;
+  --stegeman: #9EA2A2;
+  --creamery: #D6D2C4;
+  --sanford: #554F47;
+  --glory: #E4002B;
+  --lake-herrick: #00A3AD;
+  --hedges: #B4BD00;
+  --olympic: #004E60;
+  --odyssey: #E4002B;
+  --border-strong: #949494;
+  --bg: #f4f4f4;
+  --panel: #ffffff;
+  --panel-alt: #f9f9f9;
+  --line: #e0e0e0;
+  --bs-primary: var(--uga-red);
+  --bs-primary-border-subtle: var(--uga-red);
+  --bs-link-color: var(--uga-red);
+  --amber: var(--uga-red);
+  --teal: var(--olympic);
+  --rust: #a03020;
+  --text: #1a1a1a;
+  --muted: #555555;
+}
+
+.text-primary {
+  color: var(--bs-primary) !important;
+}
+.border-primary {
+  border-color: var(--bs-primary) !important;
+}
+.bg-primary {
+  background-color: var(--uga-red) !important;
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: "Merriweather", "Georgia", serif;
+  min-height: 100vh;
+  padding: 32px 20px 80px;
+}
+h1,
+h2,
+h3 {
+  font-family: "Merriweather", "Georgia", serif;
+  color: var(--uga-black);
+  font-weight: 800;
+  margin: 0;
+  margin-bottom: .5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+
+.page-header {
+  margin: 0 auto 1.5rem;
+  max-width: 1200px;
+  padding: 0 1rem;
+  text-align: center;
+}
+.page-header a {
+  color: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.page-header h1 {
+  font-size: 1.4rem;
+  margin: 0;
+}
+.page-header h2 {
+  color: #555;
+  font-size: .875rem;
+  margin: .3rem 0 0;
+}
+
+.reflection-container h3{
+  text-transform: none !important;
+  line-height: 1.6;
+}
+.wrap {
+  max-width: 920px;
+  margin: 0 auto;
+  background: white;
+  padding: 2.5rem;
+  border-radius: 8px;
+  border-top: 8px solid var(--uga-red);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+.lesson-container, .app-wrapper, .reflection-container {
+    font-family: 'Merriweather', 'Georgia', 'Times New Roman', serif;
+    max-width: 1000px; margin: 0 auto 2rem auto; background: white;
+    padding: 2.5rem; border-radius: 8px; border-left: 8px solid var(--uga-red);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    font-size: 1.2rem;
+    line-height: 1.6;
+}
+
+.app-wrapper { border-left: none; border-top: 8px solid var(--uga-red); padding: 1.5rem; }
+
+.app-interface {
+    display: flex;
+    flex-direction: row;
+    gap: 30px;
+    align-items: flex-start;
+    justify-content: center;
+}
+#canvas-scroll-box {
+    width: 700px;
+    height: 600px;
+    overflow: auto;
+    border: 1px solid #eee;
+    background: #fff;
+    border-radius: 4px;
+    max-width: 100%;
+}
+
+/* ---------- Header / hero ---------- */
+.hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 36px;
+}
+.hero-text .eyebrow {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.hero-text h2 {
+  font-size: clamp(24px, 3.5vw, 36px);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+.hero-text h2 span {
+  color: var(--uga-red);
+}
+.hero-text p {
+  color: var(--muted);
+  max-width: 46ch;
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.6;
+  font-family: "Merriweather", "Georgia", serif;
+}
+.mic-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.mic-btn {
+  position: relative;
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  background: var(--panel-alt);
+  color: var(--uga-black);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.12s;
+}
+.mic-btn:hover {
+  border-color: var(--uga-red);
+  background: #fff;
+}
+.mic-btn:active {
+  transform: scale(0.97);
+}
+.mic-btn svg {
+  width: 34px;
+  height: 34px;
+  stroke: var(--uga-black);
+}
+.mic-btn.listening {
+  border-color: var(--uga-red);
+  box-shadow: 0 0 0 0 rgba(186, 12, 47, 0.4);
+  animation: pulse 1.4s infinite;
+}
+.mic-btn.listening svg {
+  stroke: var(--uga-red);
+}
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(186, 12, 47, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 18px rgba(186, 12, 47, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(186, 12, 47, 0);
+  }
+}
+.mic-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.mic-label.active {
+  color: var(--uga-red);
+  font-weight: bold;
+}
+/* ---------- Rack / signal chain ---------- */
+.rack {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 18px;
+  padding: 22px 4px;
+}
+.stage:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 27px;
+  bottom: -2px;
+  width: 2px;
+  height: 22px;
+  background: var(--muted-dim);
+  transition: background 0.35s;
+}
+.stage.done:not(:last-child)::after {
+  background: var(--olympic);
+}
+
+.stage-num {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  background: var(--panel-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Merriweather Sans", sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--muted);
+  transition: all 0.3s;
+  z-index: 1;
+}
+.stage.active .stage-num {
+  border-color: var(--uga-red);
+  color: var(--uga-red);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(186, 12, 47, 0.12);
+}
+.stage.done .stage-num {
+  border-color: var(--olympic);
+  color: var(--olympic);
+  background: rgba(0, 85, 164, 0.08);
+}
+
+.stage-body {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  background: var(--panel-alt);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px 20px;
+  transition: border-color 0.3s, background 0.3s;
+}
+.stage.active .stage-body {
+  border-color: var(--uga-red);
+  background: #fff;
+}
+.stage.done .stage-body {
+  border-color: var(--olympic);
+  background: #fff;
+}
+
+.stage-title {
+  font-family: "Merriweather Sans", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.stage.active .stage-title,
+.stage.done .stage-title {
+  color: var(--uga-black);
+}
+.stage-sub {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 10px;
+  font-family: "IBM Plex Mono", monospace;
+}
+.stage-content {
+  font-size: 14px;
+  color: var(--text);
+  min-height: 20px;
+  font-family: "Merriweather Sans", sans-serif;
+}
+.placeholder {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.transcript-box {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text);
+  font-family: "IBM Plex Mono", monospace;
+}
+.transcript-box .interim {
+  color: var(--muted);
+}
+
+/* NLU chips */
+.nlu-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.chip {
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-family: "IBM Plex Mono", monospace;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.chip .k {
+  color: var(--muted);
+}
+.chip .v {
+  color: var(--uga-red);
+  font-weight: 600;
+}
+.chip.slot .v {
+  color: var(--olympic);
+}
+
+/* dialogue manager table */
+.dm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+/* This generic table look is reused for genuinely technical readouts (the
+   dialogue-manager mapping in 1_five_stage_pipeline.html) and for ordinary
+   human-readable summaries (a preference record in 3E_rlhf_try.html) — so the
+   mono/geek-y font is scoped to the specific technical instance, not the class
+   itself. */
+#dmOut .dm-table {
+  font-family: "IBM Plex Mono", monospace;
+}
+.dm-table th {
+  text-align: left;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.dm-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+}
+.dm-table tr.matched td {
+  color: var(--uga-black);
+  background: rgba(0, 85, 164, 0.07);
+}
+.dm-table tr.matched td:first-child {
+  color: var(--olympic);
+  font-weight: 600;
+}
+.arrow-cell {
+  color: var(--muted-dim);
+}
+.dm-table tr.matched .arrow-cell {
+  color: var(--olympic);
+}
+
+.machine-intent-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--olympic);
+  color: var(--olympic);
+  background: rgba(0, 85, 164, 0.08);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.machine-intent-badge .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--olympic);
+}
+
+.nlg-bubble {
+  background: white;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--uga-red);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.tts-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.tts-btn {
+  border: 1px solid var(--border-strong);
+  background: white;
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: border-color 0.2s, color 0.2s;
+}
+.tts-btn:hover {
+  border-color: var(--uga-red);
+  color: var(--uga-red);
+}
+.tts-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.bars {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: 14px;
+}
+.bars span {
+  width: 3px;
+  background: var(--uga-red);
+  display: block;
+  border-radius: 1px;
+  animation: bar 0.9s infinite ease-in-out;
+}
+.bars span:nth-child(1) {
+  height: 40%;
+  animation-delay: 0s;
+}
+.bars span:nth-child(2) {
+  height: 100%;
+  animation-delay: 0.15s;
+}
+.bars span:nth-child(3) {
+  height: 60%;
+  animation-delay: 0.3s;
+}
+.bars span:nth-child(4) {
+  height: 80%;
+  animation-delay: 0.45s;
+}
+@keyframes bar {
+  0%,
+  100% {
+    transform: scaleY(0.4);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.bars.hidden {
+  display: none;
+}
+
+.statusbar {
+  margin-top: 36px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--muted);
+  font-family: "IBM Plex Mono", monospace;
+}
+
+/* ---------- Buttons ---------- */
+/* One shared scale for every button variant: same font, size, padding and
+   minimum touch-target height, so a button looks the same whether it sits
+   directly in a card (19px inherited text) or inside a .stage-content (14px).
+   Works on <button> and on <a class="btn-uga">. */
+.btn-uga,
+.btn-uga-dark,
+.btn-uga-outline,
+.btn-reset {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-family: 'Merriweather Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.05em;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: opacity 0.2s, border-color 0.2s, color 0.2s;
+}
+.btn-uga,
+.btn-uga-dark,
+.btn-reset {
+    border: 1px solid transparent;
+    text-transform: uppercase;
+}
+.btn-uga:disabled, .btn-uga-dark:disabled, .btn-uga-outline:disabled, .btn-reset:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+.btn-uga {
+    background-color: var(--uga-red);
+    color: #fff;
+}
+.btn-uga:hover {
+    opacity: 0.9;
+    background-color: var(--uga-red);
+    color: #fff;
+}
+
+.btn-uga-dark {
+    background-color: var(--uga-black);
+    color: #fff;
+}
+.btn-uga-dark:hover { background-color: #333; color: #fff; }
+.btn-uga-outline {
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    color: var(--muted);
+    letter-spacing: 0.02em;
+}
+.btn-uga-outline:hover {
+    border-color: var(--uga-red);
+    color: var(--uga-red);
+}
+
+.btn-reset {
+  background: #666;
+  color: white;
+}
+.btn-reset:hover { background: #4d4d4d; color: white; }
+
+/* A wrapping row of buttons (and small status text). Replaces the per-page
+   .actions / .bc-actions / .toolbar copies. */
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.reset-btn {
+  background: none;
+  border: 1px solid var(--border-strong);
+  color: var(--muted);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  cursor: pointer;
+}
+.reset-btn:hover {
+  border-color: var(--uga-red);
+  color: var(--uga-red);
+}
+
+/* ---------- Form fields ---------- */
+/* Wrap a label + control (+ optional .field-hint) in .field and it gets the
+   site-standard look: 13px bold Merriweather Sans label, 15px control text,
+   44px minimum height. Applet-specific layout (grids, inline rows) goes on
+   the wrapper's parent, not on these rules. */
+.field { margin: 16px 0; }
+.field label,
+.field .field-label {
+  display: block;
+  font-family: "Merriweather Sans", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  margin: 0 0 6px;
+}
+.field input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.field select,
+.field textarea {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  background: #fff;
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  font-family: "Merriweather Sans", sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.field select { width: auto; max-width: 100%; }
+.field textarea { resize: vertical; }
+.field input::placeholder,
+.field textarea::placeholder { color: var(--muted); }
+.field-hint {
+  font-family: "Merriweather Sans", sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+  margin: 6px 0 0;
+}
+.field-optional { font-weight: 400; color: var(--muted); }
+/* A prompt/hint sitting between a label and its control. */
+.field label + .field-hint { margin: 0 0 8px; }
+/* Inline error/validation message (put role="alert" on it; empty = invisible). */
+.error-text {
+  margin: 8px 0;
+  font-family: "Merriweather Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #8d0924;
+}
+.error-text:empty { display: none; }
+/* A button row whose buttons are all [hidden] takes no space. */
+.btn-row:not(:has(> :not([hidden]))) { display: none; }
+
+/* ---------- Reflection notes ("Write down your thoughts") ---------- */
+/* The one standard free-text box at the end of the Reflection & Discussion
+   Guide. Same markup, wording and spacing on every applet that has one. */
+.reflection-notes {
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+}
+.reflection-notes > label { font-size: 1rem; }
+.reflection-notes .btn-row { margin-bottom: 4px; }
+
+/* ---------- Chat: conversation log + composer ---------- */
+/* One conversation look for every applet that shows a chat. Human turns sit
+   left in grey, AI turns sit right in a teal tint; each turn has a small
+   "1. You" speaker line so turns can be cited by number. Per-turn extras
+   (a mark/annotation control, a "just added" flag) go in .chat-turn__extras;
+   options that belong to the whole conversation (auto-generate toggle, speaker
+   select) go in .chat-compose__extras. */
+.chat-log {
+  list-style: none;
+  margin: 0;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 140px;
+  max-height: 420px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-family: "Merriweather Sans", sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text);
+}
+.chat-log--static { min-height: 0; max-height: none; overflow: visible; }
+.chat-empty {
+  margin: auto;
+  color: var(--muted);
+  font-style: italic;
+  text-align: center;
+}
+.chat-turn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: flex-start;
+  max-width: 90%;
+  min-width: 0;
+}
+.chat-turn.ai { align-items: flex-end; align-self: flex-end; }
+.chat-turn__speaker {
+  margin: 0 6px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.chat-turn.ai .chat-turn__speaker { color: var(--olympic); }
+.chat-turn__text {
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid #e3e3e3;
+  border-radius: 16px 16px 16px 4px;
+  background: #f1f1f1;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.chat-turn.ai .chat-turn__text {
+  border-color: rgba(0, 78, 96, 0.3);
+  border-radius: 16px 16px 4px 16px;
+  background: rgba(0, 78, 96, 0.09);
+}
+.chat-turn.just-added .chat-turn__text { box-shadow: 0 0 0 3px rgba(186, 12, 47, 0.15); }
+.chat-turn__extras { margin: 6px 6px 0; max-width: 100%; font-size: 13px; }
+.chat-turn__extras .field { margin: 0; }
+.chat-turn__extras select { min-height: 36px; padding: 6px 10px; font-size: 13px; }
+
+/* "AI is typing" dots, shown inside an empty .chat-turn__text. */
+.chat-turn.thinking .chat-turn__text { display: flex; align-items: center; min-width: 52px; }
+.thinking-dots { display: flex; gap: 4px; align-items: center; height: 14px; }
+.thinking-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.5;
+  animation: think-bounce 1.4s infinite ease-in-out both;
+}
+.thinking-dots span:nth-child(1) { animation-delay: -0.32s; }
+.thinking-dots span:nth-child(2) { animation-delay: -0.16s; }
+@keyframes think-bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .thinking-dots span { animation: none; opacity: 0.9; }
+}
+
+.chat-status {
+  min-height: 1.6em;
+  margin: 10px 0 0;
+  font-family: "Merriweather Sans", sans-serif;
+  font-size: 13px;
+  color: var(--olympic);
+}
+.chat-compose { margin-top: 12px; }
+.chat-compose__row { display: flex; align-items: flex-end; gap: 8px; }
+.chat-compose__row > input,
+.chat-compose__row > textarea { flex: 1 1 auto; min-width: 0; }
+.chat-compose__row > select,
+.chat-compose__row > button { flex: 0 0 auto; }
+.chat-compose__extras {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-top: 8px;
+  font-family: "Merriweather Sans", sans-serif;
+  font-size: 13px;
+  color: var(--muted);
+}
+.chat-compose__extras label { display: inline; margin: 0; font-weight: 400; }
+@media (max-width: 640px) {
+  .chat-compose__row { flex-wrap: wrap; }
+  .chat-compose__row > input,
+  .chat-compose__row > textarea { flex: 1 1 100%; }
+  .chat-turn { max-width: 96%; }
+}
+
+/* ---------- Streamlined input row (editable list of numbered items) ---------- */
+/* For a list the student can edit line by line (see 5C's conversation editor):
+   numbered stamp + inline fields, no per-item <fieldset>/<legend> chrome. To
+   just *display* a conversation, use .chat-log instead. */
+.turn-row { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+.turn-row:last-of-type { border-bottom: none; }
+.turn-stamp {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 700;
+  font-size: 11px;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel-alt);
+}
+.turn-row.just-added .turn-stamp {
+  border-color: var(--uga-red);
+  color: var(--uga-red);
+  box-shadow: 0 0 0 3px rgba(186, 12, 47, 0.12);
+}
+.turn-body { flex: 1; min-width: 0; }
+
+/* ---------- Per-step discussion box / optional supplementary info ---------- */
+/* Originated in docs/module_9/9D_rlhf_rewards.html. .discussion-box is for a prompt
+   tied to one specific step of a multi-step applet — never for the final wrap-up
+   Reflection & Discussion Guide, which is always a plain list (see conventions.md).
+   .glossary-box (a styled <details>) is for genuinely optional supplementary info,
+   never for Background/Instructions, which must stay always-visible. */
+.discussion-box {
+  background: rgba(180, 189, 0, 0.12);
+  border-left: 4px solid var(--hedges);
+  padding: 12px 16px;
+  margin: 16px 0;
+  font-size: 14px;
+  border-radius: 0 6px 6px 0;
+}
+.discussion-box h4 {
+  margin: 0 0 6px;
+  color: var(--sanford);
+  font-family: "Merriweather Sans", sans-serif;
+  font-size: 12.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.glossary-box {
+  background: var(--panel-alt);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin: 14px 0;
+  font-size: 13px;
+}
+.glossary-box a:not([class]) { color: #0055a4; text-underline-offset: 3px; }
+.glossary-box summary {
+  font-family: "Merriweather Sans", sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: var(--olympic);
+}
+.glossary-box ul { margin: 10px 0 0; padding-left: 20px; }
+.glossary-box li { margin-bottom: 6px; }
+
+.unsupported {
+  border: 1px solid var(--uga-red);
+  background: rgba(186, 12, 47, 0.08);
+  color: var(--uga-red);
+  padding: 14px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 28px;
+}
+
+#output-box, .output-box {
+  background: var(--panel-alt);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-top: 16px;
+  font-size: 14px;
+  color: var(--text);
+}
+.confidence-bar-container {
+  background: var(--line);
+  border-radius: 6px;
+  height: 10px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.confidence-fill {
+  background: var(--uga-red);
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.4s ease;
+}
+
+.status-success {
+  color: var(--olympic);
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .mic-wrap {
+    align-self: center;
+  }
+  .stage {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .stage-num {
+    width: 42px;
+    height: 42px;
+    font-size: 13px;
+  }
+  .stage:not(:last-child)::after {
+    display: none;
+    left: 21px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mic-btn.listening {
+    animation: none;
+  }
+  .bars span {
+    animation: none;
+  }
+}
+:focus-visible {
+  outline: 2px solid var(--uga-red);
+  outline-offset: 2px;
+}
+
+.uga-accent { color: var(--uga-red); font-weight: bold; }
+.step-box { background: #fdfdfd; border: 1px solid #eee; padding: 15px; border-radius: 5px; margin-bottom: 1rem; }
+
+.spoiler {
+    background: #ccc; color: #ccc; cursor: pointer;
+    padding: 2px 6px; border-radius: 3px; transition: background 0.3s;
+    user-select: none;
+}
+.spoiler:active, .spoiler.revealed { background: #f8f8f8; color: var(--uga-red); user-select: text; }
+
+.label-sm { font-family: sans-serif; font-weight: bold; font-size: 0.85rem; color: #444; }
+.char-count { font-family: sans-serif; font-size: 0.75rem; text-align: right; margin-top: -10px; font-weight: bold; }
+
+.applet-feedback-card {
+  max-width: 1000px;
+  margin: 32px auto 96px;
+  padding: 2.5rem;
+  border: 1px solid #d6d2ce;
+  border-left: 8px solid var(--uga-red);
+  border-radius: 8px;
+  background: #f7f7f7;
+}
+
+.source-card {
+  max-width: 1000px;
+  margin: 32px auto 32px;
+  padding: 2.5rem;
+  padding-top: 1.5rem;
+  padding-bottom: 1rem;
+  border: 1px solid #d6d2ce;
+  border-left: 8px solid var(--uga-red);
+  border-radius: 8px;
+  background: #f7f7f7;
+}
+/* Sources & permissions card: where an applet credits third-party material
+   (datasets, recordings, papers, models). Goes after the feedback card. */
+.source-card h3 {
+  margin: 0 0 0.6rem;
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+}
+.source-card p,
+.source-card li {
+  margin: 0 0 0.6rem;
+  color: #554f47;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+.source-card a { color: var(--uga-red); }
+.source-card details {
+  margin: 0.6rem 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.source-card summary {
+  cursor: pointer;
+  font-family: "Merriweather Sans", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--olympic);
+}
+.source-card details > :not(summary) { margin-top: 0.6rem; }
+
+.applet-feedback-card__content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.applet-feedback-card h2 {
+  margin: 0 0 8px;
+  color: #000;
+  font-size: 1.3rem;
+  line-height: 1.3;
+}
+.applet-feedback-card p {
+  max-width: 720px;
+  margin: 0;
+  color: #554f47;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+.applet-feedback-card__tutorial {
+  display: inline-block;
+  margin-top: 10px;
+  color: #7f0a22;
+  font-size: .92rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.applet-feedback-card__tutorial::before {
+  content: "\25B7";
+  display: inline-block;
+  margin-right: 7px;
+  font-size: .75rem;
+}
+.applet-feedback-card__button {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 11px 18px;
+  border: 2px solid #ba0c2f;
+  border-radius: 6px;
+  background: #ba0c2f;
+  color: #fff;
+  font-size: .95rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+}
+.applet-feedback-card__button:hover {
+  border-color: #8f0a25;
+  background: #8f0a25;
+}
+a:focus-visible { outline: 3px solid #f9a825; outline-offset: 3px; }
+
+/* Skip link (first element in <body>) and the <main tabindex="-1"> it targets. */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 16px;
+  z-index: 100;
+  padding: 12px 16px;
+  border: 1px solid var(--uga-red);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--text);
+}
+.skip-link:focus { top: 12px; }
+[tabindex="-1"]:focus { outline: 2px solid var(--uga-red); outline-offset: 2px; }
+@media (max-width: 720px) {
+  .applet-feedback-card { margin: 24px 16px 72px; padding: 20px; }
+  .applet-feedback-card__content { align-items: stretch; flex-direction: column; }
+  .applet-feedback-card__button { width: 100%; }
+}
+
+.source-note { border-top: 1px solid #d6d2c4; color: #554f47; font-size: .82rem; line-height: 1.55; margin-top: 1.5rem; padding-top: 1rem; }
+.source-note p { margin: 0; }
+.source-note strong { color: #222; }
+
+/* Feedback followed by another standard card needs inter-card spacing, not end-of-page spacing. */
+.applet-feedback-card--followed { margin-bottom: 24px; }
+
+/* Bootstrap inline-code pink fails AA on the site's gray and blue panels. */
+code { color: inherit; }
+
+/* Wide technical tables scroll within the card, including with a keyboard. */
+.table-scroll { max-width: 100%; overflow: auto; }
+
+/* Normalized dates must also contrast with newly highlighted table rows. */
+#temporal-results .text-success { color: var(--olympic) !important; }
+
+/* Shared weighted highlighter. Direction remains readable without colour. */
+.hl-output { min-height:100px; max-height:340px; overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; padding:16px; border:1px solid var(--line); border-radius:8px; background:#fff; color:#1a1a1a; font:15px/1.9 "Merriweather Sans",sans-serif; }
+.hl-mark { color:#1a1a1a; padding:2px 1px; border-radius:2px; }
+.hl-mark--pos { background:rgba(242,185,45,calc(.12 + var(--hl-strength,.5) * .38)); text-decoration:underline solid #715000 2px; text-underline-offset:3px; }
+.hl-mark--neg { background:rgba(0,130,140,calc(.08 + var(--hl-strength,.5) * .22)); text-decoration:underline dashed #00545b 2px; text-underline-offset:3px; }
+.hl-weight { font:12px "IBM Plex Mono",monospace; margin-left:3px; }
+.hl-legend { display:flex; flex-wrap:wrap; gap:8px 20px; padding-left:20px; font:14px/1.7 "Merriweather Sans",sans-serif; }
+.hl-table { width:100%; font:14px/1.6 "Merriweather Sans",sans-serif; }
+.hl-table th,.hl-table td { padding:8px; text-align:left; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
+.hl-table caption { caption-side:top; color:var(--text); }
+.hl-table th:last-child,.hl-table td:last-child { white-space:nowrap; overflow-wrap:normal; }
+
+/* Opt-in sentence case for instructional steps and optional supplementary headings. */
+.stage-title.stage-title--sentence-case,
+.glossary-box > summary.summary--sentence-case { text-transform: none; letter-spacing: normal; }
+
+/* Readable in-content navigation on the shared pale stage background. */
+.activity-link, .activity-link:visited { color:#0055a4; text-underline-offset:3px; }
+.activity-link:hover { color:#003e78; }
+
+/* One page-end spacing budget when a sources footer finishes the activity. */
+body.page--compact-end { padding-bottom:32px; }
+body.page--compact-end > footer.source-card { margin-bottom:0; }
+
+/* Text-only heroes can use the full card width without a side widget. */
+.hero--text-only { padding-bottom:16px; margin-bottom:16px; }
+.hero--text-only .hero-text { width:100%; min-width:0; }
+.hero--text-only .hero-text p { max-width:none; margin-bottom:0; }
+
+/* Opt-in narrower card gutters keep reading space on phones. */
+@media (max-width:640px) {
+  body.page--responsive-cards { padding-left:12px; padding-right:12px; }
+  .page--responsive-cards .lesson-container,
+  .page--responsive-cards .reflection-container,
+  .page--responsive-cards .applet-feedback-card,
+  .page--responsive-cards .source-card { padding:20px; }
+  .page--responsive-cards .app-wrapper { padding:16px; }
+  .page--responsive-cards .stage-body { padding:16px 12px; }
+}
