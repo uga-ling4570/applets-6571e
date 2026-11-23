@@ -1,0 +1,53 @@
+/* Only the smoothing controls, comparison charts, calculation and practice questions. */
+.smoothing-app .stage-content { min-width: 0; font-size: 16px; }
+.smoothing-app .stage-content > p:first-child { margin-top: 0; }
+.alpha-controls { display: grid; grid-template-columns: minmax(0, 1fr) 140px; gap: 20px; align-items: end; }
+.alpha-controls .field { margin-bottom: 8px; min-width: 0; }
+.alpha-controls #alpha-slider { padding: 0; accent-color: var(--uga-red); cursor: pointer; }
+.smoothing-app [data-alpha][aria-pressed="true"] { background: #fbeef1; box-shadow: inset 0 0 0 1px var(--uga-red); }
+.smoothing-copy { font-family: "Merriweather Sans", sans-serif; font-size: 15px; }
+.smoothing-current { font-weight: 700; color: var(--olympic); }
+.smoothing-charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin: 24px 0; }
+.smoothing-chart { min-width: 0; }
+.smoothing-chart h4, .smoothing-calculation h4 { margin: 0 0 16px; font: 700 18px/1.4 "Merriweather Sans", sans-serif; }
+.smoothing-bar-row { margin: 0 0 16px; }
+.smoothing-bar-label { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font: 15px/1.5 "Merriweather Sans", sans-serif; }
+.smoothing-bar-track { height: 18px; margin-top: 5px; background: #f2f2f2; border: 1px solid #767676; overflow: hidden; }
+.smoothing-bar-fill { display: block; height: 100%; background: var(--olympic); }
+#smoothed-chart .smoothing-bar-fill { background: var(--uga-red); }
+.smoothing-insight { padding: 14px 16px; border-left: 4px solid var(--olympic); background: #edf5f6; border-radius: 0 6px 6px 0; }
+.smoothing-totals { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 12px; margin: 24px 0; }
+.smoothing-totals > div { padding: 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel-alt); min-width: 0; }
+.smoothing-totals dt { font: 700 14px/1.5 "Merriweather Sans", sans-serif; }
+.smoothing-totals dd { margin: 8px 0 0; font: 600 18px/1.5 "Merriweather Sans", sans-serif; overflow-wrap: anywhere; }
+.smoothing-table-scroll { max-width: 100%; overflow-x: auto; margin-top: 24px; }
+.smoothing-table { width: 100%; min-width: 600px; border-collapse: collapse; font: 15px/1.5 "Merriweather Sans", sans-serif; }
+.smoothing-table caption { caption-side: top; color: var(--text); font-weight: 700; padding: 0 0 12px; }
+.smoothing-table th, .smoothing-table td { border-bottom: 1px solid var(--line); padding: 10px 8px; text-align: right; vertical-align: middle; }
+.smoothing-table th:first-child { text-align: left; white-space: nowrap; }
+.smoothing-table thead th { background: var(--panel-alt); }
+.smoothing-table tfoot { font-weight: 700; }
+.smoothing-calculation { margin-top: 24px; padding: 20px; border: 1px solid var(--border-strong); border-radius: 8px; }
+.smoothing-formula, .smoothing-worked { font-family: "Merriweather Sans", sans-serif; overflow-wrap: anywhere; }
+.smoothing-worked { margin-bottom: 0; }
+.smoothing-quiz + .smoothing-quiz { margin-top: 32px; padding-top: 28px; border-top: 1px solid var(--border-strong); }
+.smoothing-quiz fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.smoothing-quiz legend { float: none; width: 100%; margin-bottom: 14px; font: 700 17px/1.6 "Merriweather Sans", sans-serif; }
+.smoothing-choice { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 10px 12px; margin-bottom: 8px; border: 1px solid var(--border-strong); border-radius: 6px; font: 16px/1.5 "Merriweather Sans", sans-serif; cursor: pointer; }
+.smoothing-choice:has(input:checked) { border-color: var(--olympic); background: #edf5f6; }
+.smoothing-choice input { width: 18px; height: 18px; flex: 0 0 18px; accent-color: var(--olympic); }
+.smoothing-choice:has(input:disabled) { cursor: default; }
+.smoothing-quiz-feedback { font: 16px/1.6 "Merriweather Sans", sans-serif; margin-bottom: 0; }
+.smoothing-quiz-feedback:not(:empty) { padding: 14px 16px; border: 1px solid var(--border-strong); border-left: 4px solid var(--olympic); border-radius: 0 6px 6px 0; background: var(--panel-alt); }
+.applet-feedback-card .smoothing-feedback-note, .smoothing-feedback-steps { font: 16px/1.6 "Merriweather Sans", sans-serif; margin: 20px 0 0; }
+.smoothing-feedback-steps { padding-left: 24px; }
+.smoothing-feedback-steps li + li { margin-top: 8px; }
+@media (max-width: 760px) {
+  .smoothing-charts { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .smoothing-totals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .smoothing-totals > div:last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 420px) {
+  .alpha-controls { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .smoothing-calculation { padding: 14px; }
+}
